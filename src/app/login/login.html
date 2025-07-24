@@ -1,0 +1,35 @@
+<div class="login-container">
+  <div class="background-wrapper">
+    <img src="assets/bg.jpg" class="bg-image" alt="background" />
+    <svg xmlns="http://www.w3.org/2000/svg" class="bg-svg" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+      <path d="M520.876 0H1920V1080H0H395.897L646.301 1045.05C679.449 1040.42 710.905 1027.55 737.789 1007.62L751.471 997.47C802.341 959.745 832.338 900.156 832.338 836.824V815.217C832.338 771.297 846.795 728.598 873.477 693.712L932.765 616.197C977.993 557.064 986.634 477.704 955.192 410.223L936.611 370.346C910.193 313.647 851.962 278.7 789.501 282.058L689.295 287.445C614.95 291.442 564.514 213.005 598.999 147.022V147.022C624.451 98.3242 603.944 38.2385 554.031 15.2621L520.876 0Z" fill="#F9EDDD"/>
+    </svg>
+  </div>
+
+  <div class="login-form-wrapper">
+    <img src="assets/logo.png" alt="Scarrow logo" class="logo" />
+    <div class="login-form">
+
+      <!-- Error message shown here -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <input type="email" [(ngModel)]="email" placeholder="Email" />
+
+      <div class="passfooter">
+        <input type="password" [(ngModel)]="password" placeholder="Password" />
+
+        <div class="form-footer">
+          <label><input type="checkbox" class="checkbox-round" />Remember me</label>
+          <a href="#">Forgot Password?</a>
+        </div>
+      </div>
+    </div>
+    <button type="button" (click)="login()">Log In</button>
+    <div class="signup-redirect">
+      Don’t have an account?
+      <a routerLink="/signup"><strong>SignUp</strong></a>
+    </div>
+  </div>
+</div>
