@@ -1,0 +1,207 @@
+/* Whole login frame */
+.login-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Background */
+.background-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.bg-svg {
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  display: block;
+}
+.bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 1075px;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* Error message */
+.error-message {
+  color: #b30000;
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+/* Login form with logo */
+.login-form-wrapper {
+  position: absolute;
+  right: 8%;
+  display: flex;
+  width: 654px;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  z-index: 3;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* Keep logo proportional */
+.logo {
+  width: 100%;
+  height: auto;
+  max-width: 655px;
+  aspect-ratio: 655 / 338;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  width: 100%;
+}
+
+.login-form input {
+  width: 100%;
+  max-width: 450px;
+  height: 54px;
+  padding: 14px;
+  border-radius: 8px;
+  background-color: #F9EDDD;
+  border: 1px solid #37612F;
+}
+
+.login-form ::placeholder {
+  color: var(--New-group-shade6, #37612F);
+  font-family: Nunito;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+/* Footer below inputs */
+.passfooter {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.form-footer label {
+  color: var(--Experiment-Color, #49674B);
+  font-family: Roboto;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-footer input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  background-color: #F9EDDD;
+  border-radius: 50%;
+}
+
+/* Button */
+button {
+  width: 192px;
+  height: 48px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  background: #49674B;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+  color: #FFF;
+  text-align: center;
+  font-family: Nunito;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 28px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: #36512f;
+}
+
+/* Sign up redirect */
+.signup-redirect {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.signup-redirect a {
+  color: #4B8540;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.signup-redirect a:hover {
+  text-decoration: underline;
+}
+
+/* RESPONSIVE MEDIA QUERIES */
+@media (max-width: 1024px) {
+  .login-form-wrapper {
+    right: 5%;
+    width: 90%;
+    max-width: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+
+  .bg-image,
+  .bg-svg {
+    display: none;
+  }
+
+  .login-form-wrapper {
+    position: static;
+    width: 100%;
+    max-width: 95%;
+    margin: 0 auto;
+  }
+
+  .login-form input,
+  .form-footer,
+  .passfooter {
+    width: 100%;
+  }
+
+  button {
+    width: 100%;
+    max-width: 300px;
+  }
+}
