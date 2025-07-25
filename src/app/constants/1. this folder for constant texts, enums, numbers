@@ -1,0 +1,17 @@
+//sample
+
+filename: login.constant.ts
+export const APP_TITLE = 'Scarrow Web Portal';
+export const API_BASE_URL = 'https://api.scarrowweb.com/v1';
+export const MAX_LOGIN_ATTEMPTS = 5;
+
+or
+
+fliename: userRole.constant.ts
+export enum UserRole {
+  Admin = 'admin',
+  Editor = 'editor',
+  Viewer = 'viewer',
+}
+
+
