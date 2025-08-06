@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router'; // ✅ Added Router import
 
 @Component({
   selector: 'app-signup',
@@ -11,47 +11,92 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./signup.css']
 })
 export class SignupComponent {
-  email = '';
+  constructor(private router: Router) {} // ✅ Inject the Router service
+
+  step = 1;
+
+  phoneNumber = '';
   password = '';
   confirmPassword = '';
+  firstName = '';
+  middleName = '';
+  lastName = '';
+  birthdate: string = '';
+
+  streetName = '';
+  barangay = '';
+  townCity = '';
+  province = '';
+  zipCode = '';
+
   errorMessage = '';
 
-  signup() {
-    const trimmedEmail = this.email.trim();
-    const trimmedPassword = this.password.trim();
-    const trimmedConfirmPassword = this.confirmPassword.trim();
-
-    // Clear previous error
+  goToStep2() {
+    if (!this.validateStep1()) return;
     this.errorMessage = '';
+    this.step = 2;
+  }
 
-    // Check for empty fields
-    if (!trimmedEmail || !trimmedPassword || !trimmedConfirmPassword) {
-      this.errorMessage = 'All fields are required.';
-      return;
+  signupFinal() {
+    if (this.step === 2) {
+      if (!this.validateStep2()) return;
+      this.step = 3;
+    } else if (this.step === 3) {
+      if (!this.validateStep3()) return;
+      this.submitForm();
     }
+  }
 
-    // Email format check
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(trimmedEmail)) {
-      this.errorMessage = 'Please enter a valid email address.';
-      return;
+  goBackStep1() {
+    if (this.step > 1) this.step--;
+  }
+
+  validateStep1(): boolean {
+    const phonePattern = /^(09|\+639)\d{9}$/;
+    if (!this.phoneNumber || !phonePattern.test(this.phoneNumber)) {
+      this.errorMessage = 'Please enter a valid Philippine phone number<br>(e.g., 09123456789 or +639123456789).';
+      return false;
     }
-
-    // Password length check (optional but recommended)
-    if (trimmedPassword.length < 6) {
-      this.errorMessage = 'Password must be at least 6 characters long.';
-      return;
+    if (!this.password || this.password.length < 6) {
+      this.errorMessage = 'Password must be at least 6 characters.';
+      return false;
     }
-
-    // Confirm password match
-    if (trimmedPassword !== trimmedConfirmPassword) {
+    if (this.password !== this.confirmPassword) {
       this.errorMessage = 'Passwords do not match.';
-      return;
+      return false;
     }
+    return true;
+  }
 
-    // ✅ If all validation passes
+  validateStep2(): boolean {
+    if (!this.firstName || !this.lastName || !this.birthdate) {
+      this.errorMessage = 'Please fill in all required fields.';
+      return false;
+    }
+    return true;
+  }
+
+  validateStep3(): boolean {
+    if (!this.streetName || !this.barangay || !this.townCity || !this.province || !this.zipCode) {
+      this.errorMessage = 'Please complete your address.';
+      return false;
+    }
+    return true;
+  }
+
+  submitForm() {
     this.errorMessage = '';
-    alert('Signup successful! Proceeding to next step...');
-    // Redirect or further logic here
+
+    // 🔧 Simulate form submit / API call
+    console.log('Submitting form with:', {
+      phoneNumber: this.phoneNumber,
+      password: this.password,
+      name: `${this.firstName} ${this.middleName} ${this.lastName}`,
+      birthdate: this.birthdate,
+      address: `${this.streetName}, ${this.barangay}, ${this.townCity}, ${this.province}, ${this.zipCode}`
+    });
+
+    // ✅ After successful signup, redirect to login
+    this.router.navigate(['/login']);
   }
 }

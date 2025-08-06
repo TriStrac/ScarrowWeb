@@ -1,50 +1,67 @@
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'; // For ngModel two-way binding
-import { CommonModule } from '@angular/common'; // For common directives like ngIf
-import { RouterModule } from '@angular/router'; // For routerLink or future navigation
+import { FormsModule } from '@angular/forms'; // Needed for ngModel two-way binding
+import { CommonModule } from '@angular/common'; // For structural directives like *ngIf
+import { RouterModule, Router } from '@angular/router'; // Router used for navigation after successful login
 
 @Component({
-  selector: 'app-login', // Component tag name
+  selector: 'app-login', // Custom tag to use this component
   standalone: true, // Allows this component to be used independently
-  imports: [CommonModule, FormsModule, RouterModule], // Import required modules for this component
-  templateUrl: './login.html', // HTML template file
-  styleUrls: ['./login.css'] // CSS styles file
+  imports: [CommonModule, FormsModule, RouterModule], // Import necessary Angular modules
+  templateUrl: './login.html', // HTML structure
+  styleUrls: ['./login.css'] // Styles specific to this component
 })
 export class LoginComponent {
-  // Properties bound to input fields
-  email = '';
-  password = '';
-  errorMessage = ''; // Property to hold error messages for display in the template
+  // Form field bindings
+  phoneNumber = ''; // Holds user input for phone number
+  password = ''; // Holds user input for password
+  errorMessage = ''; // Used to display error messages
 
-  // Function that runs when the Login button is clicked
+  // Injecting Angular Router for redirection
+  constructor(private router: Router) {}
+
+  // Function triggered when the Login button is clicked
   login() {
-    // Remove whitespace from email and password
-    const trimmedEmail = this.email.trim();
+    this.errorMessage = ''; // Reset error message on every login attempt
+
+    const trimmedPhoneNumber = this.phoneNumber.trim(); // Remove spaces
     const trimmedPassword = this.password.trim();
 
-    // Clear previous error message
-    this.errorMessage = '';
-
-    // Check if either field is empty
-    if (!trimmedEmail || !trimmedPassword) {
-      this.errorMessage = 'Please fill in both email and password.';
-      return; // Stop execution if invalid
+    // Run custom validation before proceeding
+    if (!this.validateInputs(trimmedPhoneNumber, trimmedPassword)) {
+      return; // Stop if validation fails
     }
 
-    // Check if email format is invalid (basic check)
-    if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
-      this.errorMessage = 'Please enter a valid email address.';
-      return;
-    }
-
-    // Validate hardcoded login credentials (admin/admin)
-    if (trimmedEmail === 'admin' && trimmedPassword === 'admin') {
+    // Simulate login check — replace this later with actual login service
+    if (trimmedPhoneNumber === 'admin' && trimmedPassword === 'admin') {
       alert('Login successful! Redirecting to dashboard...');
-      console.log('Redirecting to /dashboard...');
-      // TODO: Add router navigation here in the future
+      this.router.navigate(['/dashboard']); // Redirect to dashboard
     } else {
-      // If credentials are incorrect
       this.errorMessage = 'Invalid credentials. Please try again.';
     }
+  }
+
+  // Separate validation logic for better code structure
+  validateInputs(phone: string, password: string): boolean {
+    const phonePattern = /^(09|\+639)\d{9}$/; // Validates PH mobile number format
+
+    if (!phone || !password) {
+      this.errorMessage = 'Please fill in both phone number and password.';
+      return false;
+    }
+
+    // Check if phone number format is valid
+    if (!phonePattern.test(phone)) {
+      // Note: <br> works because we use [innerHTML] binding in HTML
+      this.errorMessage = 'Please enter a valid Philippine phone number<br>(e.g., 09123456789 or +639123456789).';
+      return false;
+    }
+
+    // Optional: Add basic password length requirement
+    if (password.length < 6) {
+      this.errorMessage = 'Password must be at least 6 characters.';
+      return false;
+    }
+
+    return true; // All checks passed
   }
 }

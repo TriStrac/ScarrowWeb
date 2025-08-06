@@ -7,21 +7,72 @@
   </div>
 
   <div class="signup-form-wrapper">
-    <img src="assets/logo.png" alt="Scarrow logo" class="logo" />
-    <div class="signup-form">
+    <!-- Logo only on Step 1 -->
+    <img *ngIf="step === 1" src="assets/logo.png" alt="Scarrow logo" class="logo" width="120" height="120" />
 
-      <!-- Error message shown here -->
-      <div *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
+    <!-- Step 1 -->
+    <div class="step1-form-wrapper" *ngIf="step === 1">
+      <div *ngIf="step === 1" class="signup-form">
+        <div class="error-container">
+          <div class="error-message" [innerHTML]="errorMessage"></div>
+        </div>
+        <input type="tel" [(ngModel)]="phoneNumber" placeholder="Phone Number" />
+        <input type="password" [(ngModel)]="password" placeholder="Password" />
+        <input type="password" [(ngModel)]="confirmPassword" placeholder="Confirm Password" />
       </div>
-      <input type="email" [(ngModel)]="email" placeholder="Email" />
-      <input type="password" [(ngModel)]="password" placeholder="Password" />
-      <input type="password" [(ngModel)]="confirmPassword" placeholder="Confirm Password" />
+      <button type="button" (click)="goToStep2()">Next</button>
+        <div class="signup-redirect">
+          Already have an account?
+          <a routerLink="/login"><strong>Login</strong></a>
+        </div>
     </div>
-    <button type="button" (click)="signup()">Next</button>
-    <div class="signup-redirect">
-      Already have an account?
-      <a routerLink="/login"><strong>Login</strong></a>
+    <!-- Step 2 -->
+    <div *ngIf="step === 2" class="step2-form-wrapper">
+      <div class="form-whole">
+          <div class="error-container">
+            <div class="error-message" [innerHTML]="errorMessage"></div>
+          </div>
+          <div class="form-title">
+            <!-- Example user SVG icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" calss="icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M15.7498 6C15.7498 8.07107 14.0709 9.75 11.9998 9.75C9.92877 9.75 8.24984 8.07107 8.24984 6C8.24984 3.92893 9.92877 2.25 11.9998 2.25C14.0709 2.25 15.7498 3.92893 15.7498 6Z" stroke="#627D5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4.50098 20.1182C4.57128 16.0369 7.90171 12.75 11.9998 12.75C16.0981 12.75 19.4286 16.0371 19.4987 20.1185C17.2159 21.166 14.6762 21.75 12.0002 21.75C9.32384 21.75 6.78394 21.1659 4.50098 20.1182Z" stroke="#627D5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <a>User's Profile</a>
+          </div>
+          <input type="text" [(ngModel)]="firstName" placeholder="First Name" />
+          <input type="text" [(ngModel)]="middleName" placeholder="Middle Name (optional)" />
+          <input type="text" [(ngModel)]="lastName" placeholder="Last Name" />
+          <input type="date" [(ngModel)]="birthdate" />
+      </div>
+      <div class="button-row-custom">
+        <button type="button" (click)="goBackStep1()">Back</button>
+        <button type="button" (click)="signupFinal()">Next</button>
+      </div>
     </div>
+
+    <!-- Step 3 -->
+    <div *ngIf="step === 3" class="step3-form-wrapper">
+      <div class="form-whole">
+          <div class="error-container">
+            <div class="error-message" [innerHTML]="errorMessage"></div>
+          </div>
+          <div class="form-title">
+            <!-- Example user SVG icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" calss="icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M15 10.5C15 12.1569 13.6569 13.5 12 13.5C10.3431 13.5 9 12.1569 9 10.5C9 8.84315 10.3431 7.5 12 7.5C13.6569 7.5 15 8.84315 15 10.5Z" stroke="#627D5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M19.5 10.5C19.5 17.6421 12 21.75 12 21.75C12 21.75 4.5 17.6421 4.5 10.5C4.5 6.35786 7.85786 3 12 3C16.1421 3 19.5 6.35786 19.5 10.5Z" stroke="#627D5D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <a>Address</a>
+          </div>
+          <input type="text" [(ngModel)]="streetName" placeholder="Street Name" />
+          <input type="text" [(ngModel)]="barangay" placeholder="Barangay" />
+          <input type="text" [(ngModel)]="townCity" placeholder="Town/City" />
+          <input type="text" [(ngModel)]="province" placeholder="Province" />
+          <input type="text" [(ngModel)]="zipCode" placeholder="Zip Code" />
+      </div>
+      <button type="button" (click)="signupFinal()">Sign Up</button>
+    </div>
+
   </div>
 </div>
