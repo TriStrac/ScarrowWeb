@@ -14,7 +14,6 @@ export class SidebarComponent {
   constructor(private router: Router) {}
 
   logout() {
-    // You can also clear auth token or session data here if needed
     this.router.navigate(['/login']);
   }
 }

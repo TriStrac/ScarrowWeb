@@ -1,8 +1,36 @@
-<div class="page-layout">
-  <app-sidebar></app-sidebar>
+<div class="device-content">
+    <div class="header-section">
+      <h3>Devices</h3>
+      <h1>Device List</h1>
+    </div>
 
-  <main class="device-content">
-    <h1>Device Page</h1>
-    <!-- Rest of your content -->
-  </main>
+    <div class="body-container">
+      <div class="search-box">
+        <input type="text" placeholder="Search Device Name" />
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Device Name</th>
+              <th>Status</th>
+              <th>Last Time Activated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- need to change ata if naaa nay data -->
+            <tr (click)="goToDevice('1')">
+              <td>Device 1</td>
+              <td><span class="status active"></span> Active</td>
+              <td>2025-08-08 10:00 AM</td>
+              <td>
+                <button class="edit-btn">✏️</button>
+                <button class="delete-btn">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 </div>

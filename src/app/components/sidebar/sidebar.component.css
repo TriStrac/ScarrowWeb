@@ -1,19 +1,19 @@
 .sidebar {
   display: flex;
-  width: auto;
-  height: auto;
-  padding: 20px;
-  gap: 343px;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
+
+  width: 295px;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
   flex-shrink: 0;
 
   background: var(--offwhite, #FAF9F6);
-
-  /* shadow3 */
   box-shadow: 4px 0 16px 0 rgba(0, 0, 0, 0.09);
 }
+
 
 .top-sidebar {
   display: flex;

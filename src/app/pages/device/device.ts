@@ -1,11 +1,18 @@
 import { Component } from '@angular/core';
-import { SidebarComponent } from '../../components/sidebar/sidebar.component';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-device',
   standalone: true,
-  imports: [SidebarComponent],
+  imports: [CommonModule],
   templateUrl: './device.html',
   styleUrls: ['./device.css']
 })
-export class DeviceComponent {}
+export class DeviceComponent {
+  constructor(private router: Router) {}
+
+  goToDevice(id: string) {
+    this.router.navigate(['/device', id]);
+  }
+}
