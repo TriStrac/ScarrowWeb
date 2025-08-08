@@ -1,0 +1,22 @@
+:host {
+  display: flex;
+  height: 100vh; /* Full height of the viewport */
+  width: 100vw;  /* Full width of the viewport */
+  overflow: hidden; /* Prevent scrollbars */
+}
+
+.page-layout {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent scrollbars inside layout */
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden; /* Prevent content from overflowing */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}

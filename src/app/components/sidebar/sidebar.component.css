@@ -1,0 +1,107 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+
+  width: 295px;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+
+  background: var(--offwhite, #FAF9F6);
+  box-shadow: 4px 0 16px 0 rgba(0, 0, 0, 0.09);
+}
+
+
+.top-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: stretch;
+}
+
+.logo {
+  height: 132px;
+  align-self: stretch;
+  aspect-ratio: 85/44;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: stretch;
+}
+
+.nav-links a {
+  color: var(--New-group-shade6, #37612F);
+
+  /* P.Bold-14px */
+  font-family: Nunito;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 28px; /* 200% */
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+
+
+  display: flex;
+  height: auto;
+  padding: 10px 18px;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  border-radius: 4px;
+}
+
+.nav-links button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: Nunito;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 28px;
+  color: var(--New-group-shade6, #37612F);
+  padding: 10px 18px;
+  border-radius: 4px;
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s, color 0.2s;
+  gap: 10px;
+}
+
+/* === Hover and Active styles for both buttons and links === */
+.nav-links a:hover,
+.nav-links a.active,
+.nav-links button:hover {
+  background-color: var(--Experiment-Color-2, #627D5D);
+  color: #fff;
+}
+
+/* === SVG icon size and transition === */
+.nav-links a svg,
+.nav-links button svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.nav-links a svg path,
+.nav-links button svg path {
+  transition: stroke 0.2s;
+}
+
+/* === On hover/active, change icon stroke to white === */
+.nav-links a:hover svg path,
+.nav-links a.active svg path,
+.nav-links button:hover svg path {
+  stroke: white;
+}

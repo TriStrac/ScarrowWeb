@@ -1,0 +1,37 @@
+.page-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.device-title {
+    max-width: 80%;
+}
+
+.edit-button {
+    display: inline-flex;
+    padding: 10px 24px;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    background: var(--Experiment-Color, #49674B);
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+.edit-button:hover {
+    background-color: #d4e8d8;
+}
+
+.device-details {
+    background: var(--offwhite, #FAF9F6);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
