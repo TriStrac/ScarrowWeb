@@ -27,9 +27,9 @@ export class LoginComponent {
     const trimmedPassword = this.password.trim();
 
     // Run custom validation before proceeding
-    if (!this.validateInputs(trimmedPhoneNumber, trimmedPassword)) {
-      return; // Stop if validation fails
-    }
+    //if (!this.validateInputs(trimmedPhoneNumber, trimmedPassword)) {
+    //  return; // Stop if validation fails
+    //}
 
     // Simulate login check — replace this later with actual login service
     if (trimmedPhoneNumber === 'admin' && trimmedPassword === 'admin') {

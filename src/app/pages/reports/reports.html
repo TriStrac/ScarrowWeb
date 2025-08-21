@@ -1,0 +1,47 @@
+<div class="report-container">
+  <h2>Reports</h2>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-row">
+      <select [(ngModel)]="selectedDevice" (change)="filterData()">
+        <option *ngFor="let device of devices" [value]="device">{{ device }}</option>
+      </select>
+
+      <select [(ngModel)]="selectedLocation" (change)="filterData()">
+        <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
+      </select>
+
+      <input type="date" [(ngModel)]="startDate" (change)="filterData()">
+      <input type="date" [(ngModel)]="endDate" (change)="filterData()">
+
+      <input type="text" [(ngModel)]="searchName" placeholder="Search Farmer Name/Device Name" (input)="filterData()">
+    </div>
+  </div>
+
+  <!-- Pest Detected -->
+  <div class="pest-card">
+    <h3>Most Pest Detected:</h3>
+    <div *ngFor="let pest of mostPests" class="pest-item">
+      {{ pest.name }} ({{ pest.count }})
+    </div>
+  </div>
+
+  <!-- Totals -->
+  <div class="totals">
+    <div class="total-box">
+      <h4>Total Triggered Times:</h4>
+      <p>{{ totalTriggered }}</p>
+    </div>
+    <div class="total-box">
+      <h4>Total Active Times:</h4>
+      <p>{{ totalActive }} mins</p>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-box">
+    <h3>Device Summary Analysis</h3>
+    <canvas id="reportChart"></canvas>
+  </div>
+</div>

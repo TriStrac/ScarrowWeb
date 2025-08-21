@@ -1,0 +1,94 @@
+<div class="profile-container">
+  <!-- Header -->
+  <div class="header-section">
+    <h3 class="section-title">My Profile</h3>
+    <h1 class="page-title">Head Farmer</h1>
+  </div>
+
+  <!-- Top section: Avatar + Info -->
+  <div class="profile-header">
+    <img src="assets/peachbambi.jpg" alt="User" width="100" height="100" />
+    <div class="user-container">
+      <div class="user-info">
+        <h4>{{ user.name }}</h4>
+        <p>{{ user.email }}</p>
+      </div>
+      <button class="edit-btn" (click)="editUser()">
+      ✎ Edit User
+      </button>
+    </div>
+  </div>
+
+  <div class="divider">
+  <!-- Profile form -->
+    <div class="profile-form">
+      <!-- Left column -->
+      <div class="left-col">
+        <div class = "info-container">
+          <label>Name</label>
+          <div class="input-row">
+            <input type="text" [(ngModel)]="user.name" />
+            <button (click)="changeField('Name')">Change</button>
+          </div>
+        </div>
+        <div class = "info-container">
+          <label>Phone Number</label>
+          <div class="input-row">
+            <input type="text" [(ngModel)]="user.phone" />
+            <button (click)="changeField('Phone Number')">Change</button>
+          </div>
+        </div>
+        <div class = "info-container">
+          <label>Address</label>
+          <div class="input-row">
+            <input type="text" [(ngModel)]="user.address" />
+            <button (click)="changeField('Address')">Change</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="right-col">
+        <div class = "info-container">
+          <label>Email</label>
+          <div class="input-row">
+            <input type="email" [(ngModel)]="user.email" />
+            <button (click)="changeField('Email')">Change</button>
+          </div>
+        </div>
+
+        <div class = "info-container">
+          <label>Current Password</label>
+          <div class="input-row">
+            <input type="password" [(ngModel)]="user.currentPassword" />
+            <button (click)="changeField('Password')">Change</button>
+          </div>
+        </div>
+
+        <div class = "info-container">
+          <label>New Password</label>
+          <div class="input-row">
+            <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="user.newPassword" />
+            <button type="button" (click)="toggleNewPassword()">
+              {{ showNewPassword ? '🙈' : '👁' }}
+            </button>
+          </div>
+        </div>
+
+        <div class = "info-container">
+          <label>Confirm Password</label>
+          <div class="input-row">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="user.confirmPassword" />
+            <button type="button" (click)="toggleConfirmPassword()">
+              {{ showConfirmPassword ? '🙈' : '👁' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+      <!-- Save button -->
+      <div class="save-btn-container">
+        <button class="save-btn" (click)="saveChanges()">Save Changes</button>
+      </div>
+  </div>
+</div>

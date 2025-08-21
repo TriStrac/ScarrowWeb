@@ -88,13 +88,13 @@ export class SignupComponent {
     this.errorMessage = '';
 
     // 🔧 Simulate form submit / API call
-    console.log('Submitting form with:', {
-      phoneNumber: this.phoneNumber,
-      password: this.password,
-      name: `${this.firstName} ${this.middleName} ${this.lastName}`,
-      birthdate: this.birthdate,
-      address: `${this.streetName}, ${this.barangay}, ${this.townCity}, ${this.province}, ${this.zipCode}`
-    });
+    alert(`Submitting form with:
+      Phone Number: ${this.phoneNumber}
+      Password: ${this.password}
+      Name: ${this.firstName} ${this.middleName} ${this.lastName}
+      Birthdate: ${this.birthdate}
+      Address: ${this.streetName}, ${this.barangay}, ${this.townCity}, ${this.province}, ${this.zipCode}`);
+
 
     // ✅ After successful signup, redirect to login
     this.router.navigate(['/login']);

@@ -1,0 +1,41 @@
+<div class="farmer-content">
+  <div class="header-section">
+    <div class="title-section">
+      <h3>Farmers</h3>
+      <h1>Farmers List</h1>
+    </div>
+    <div class="actions-section">
+      <button class="add-btn" (click)="addFarmer()">Add Farmer</button>
+    </div>
+  </div>
+
+  <div class="body-container">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Search Farmer Name" />
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>User Name</th>
+            <th>Number of Devices</th>
+            <th>Number of Active Devices</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let farmer of filteredFarmers()">
+            <td>{{ farmer.name }}</td>
+            <td>{{ farmer.deviceCount }}</td>
+            <td>{{ farmer.activeDeviceCount }}</td>
+            <td>
+              <button class="edit-btn" (click)="editFarmer(farmers)">✏️</button>
+              <button class="delete-btn" (click)="deleteFarmer(farmers)">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+.report-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.filters {
+  margin-bottom: 20px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pest-card {
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 5px;
+  background: #f9f9f9;
+}
+
+.pest-item {
+  padding: 8px;
+  margin: 5px 0;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
+}
+
+.totals {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.total-box {
+  flex: 1;
+  padding: 15px;
+  background: #f8f6f1;
+  border-radius: 5px;
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
+}
+
+.total-box h4 {
+  margin: 0 0 5px;
+}
+
+.total-box p {
+  font-size: 18px;
+  font-weight: bold;
+  color: #d9534f;
+}
+
+.chart-box {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 5px;
+}

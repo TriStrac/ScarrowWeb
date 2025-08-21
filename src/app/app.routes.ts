@@ -4,7 +4,11 @@ import { LayoutComponent } from './components/layout/layout.component';
 import { DashboardComponent } from './pages/dashboard/dashboard';
 import { DeviceComponent } from './pages/device/device';
 import { SingledeviceComponent } from './pages/device/singledevice/singledevice';
-import { ActivitylogComponent } from './pages/activitylogs/activitylogs';
+import { ActivityLogsComponent } from './pages/activitylogs/activitylogs';
+import { FarmersComponent } from './pages/farmers/farmers';
+import { ProfileComponent } from './pages/profile/profile';
+import { ReportComponent } from './pages/reports/reports';
+
 
 
 export const routes: Routes = [
@@ -18,7 +22,10 @@ export const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'device', component: DeviceComponent },
       { path: 'device/:id', component: SingledeviceComponent },
-      { path: 'activitylogs', component: ActivitylogComponent },
+      { path: 'activitylogs', component: ActivityLogsComponent },
+      { path: 'farmers', component: FarmersComponent },
+      { path: 'profile', component: ProfileComponent },
+      { path: 'reports', component: ReportComponent },
     ]
   }
 ];
