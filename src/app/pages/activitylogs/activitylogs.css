@@ -64,6 +64,13 @@
   border: none;
 }
 
+input:focus {
+  border: none;
+  outline: none;
+  box-shadow: none; /* removes any glow/shadow */
+}
+
+
 .activity-feed {
   display: flex;
   width: 1332px;

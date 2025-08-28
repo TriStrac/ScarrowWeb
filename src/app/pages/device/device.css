@@ -63,6 +63,12 @@
   border: none;
 }
 
+input:focus {
+  border: none;
+  outline: none;
+  box-shadow: none; /* removes any glow/shadow */
+}
+
 .table-container table {
   width: 1350px;
   border-collapse: collapse;
@@ -89,8 +95,20 @@
   flex: 1 0 0;
   text-decoration: none;
 }
+
+.table-container a,
+.table-container td{
+  text-decoration: none;
+  color: var(--New-group-shade6, #37612F);
+  font-family: Nunito;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 20px; /* 142.857% */
+}
+
 .table-container th,
-.table-container td {
+.table-container td{
   padding: 15px;
   border: 1px solid #2d4415;
   text-align: left;

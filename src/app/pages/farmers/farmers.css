@@ -64,6 +64,12 @@
   border: none;
 }
 
+input:focus {
+  border: none;
+  outline: none;
+  box-shadow: none; /* removes any glow/shadow */
+}
+
 .table-container table {
   width: 1350px;
   border-collapse: collapse;
