@@ -20,7 +20,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let device of filteredDevices()">
+          <tr *ngFor ="let device of filteredDevices()">
             <td>
               <a href="javascript:void(0)" (click)="goToDevice(device.id)">
                 {{ device.name }}

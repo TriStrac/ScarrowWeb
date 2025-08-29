@@ -8,6 +8,8 @@ import { ActivityLogsComponent } from './pages/activitylogs/activitylogs';
 import { FarmersComponent } from './pages/farmers/farmers';
 import { ProfileComponent } from './pages/profile/profile';
 import { ReportComponent } from './pages/reports/reports';
+// Update the import path to match the actual file location and name
+import { SingleuserComponent } from './pages/farmers/singleuserpage/singleuser';
 
 
 
@@ -24,6 +26,7 @@ export const routes: Routes = [
       { path: 'device/:id', component: SingledeviceComponent },
       { path: 'activitylogs', component: ActivityLogsComponent },
       { path: 'farmers', component: FarmersComponent },
+      { path: 'farmer/:id', component: SingleuserComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'reports', component: ReportComponent },
     ]

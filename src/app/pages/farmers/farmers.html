@@ -1,26 +1,28 @@
 <div class="farmer-content">
+  <!-- Header -->
   <div class="header-section">
-    <div class="title-section">
+    <div>
       <h3>Farmers</h3>
       <h1>Farmers List</h1>
     </div>
-    <div class="actions-section">
-      <button class="add-btn" (click)="addFarmer()">Add Farmer</button>
-    </div>
+    <button class="add-btn" (click)="addFarmer()">+ Add Farmer</button>
   </div>
 
+  <!-- Body -->
   <div class="body-container">
+    <!-- Search Box -->
     <div class="search-box">
-      <input type="text" [(ngModel)]="searchTerm" placeholder="Search Farmer Name" />
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Search farmer..." />
     </div>
 
+    <!-- Table -->
     <div class="table-container">
       <table>
         <thead>
           <tr>
-            <th>User Name</th>
-            <th>Number of Devices</th>
-            <th>Number of Active Devices</th>
+            <th>Name</th>
+            <th>Devices</th>
+            <th>Active Devices</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -28,10 +30,16 @@
           <tr *ngFor="let farmer of filteredFarmers()">
             <td>{{ farmer.name }}</td>
             <td>{{ farmer.deviceCount }}</td>
-            <td>{{ farmer.activeDeviceCount }}</td>
             <td>
-              <button class="edit-btn" (click)="editFarmer(farmers)">✏️</button>
-              <button class="delete-btn" (click)="deleteFarmer(farmers)">🗑️</button>
+              <span
+                class="status"
+                [ngClass]="{ active: farmer.activeDeviceCount > 0, inactive: farmer.activeDeviceCount === 0 }"
+              ></span>
+              {{ farmer.activeDeviceCount }}
+            </td>
+            <td>
+              <button class="edit-btn" (click)="goToFarmer(farmer)">✎</button>
+              <button class="delete-btn" (click)="deleteFarmer(farmer)">🗑</button>
             </td>
           </tr>
         </tbody>

@@ -1,20 +1,35 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-singledevice',
+  selector: 'app-device',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './singledevice.html',
   styleUrls: ['./singledevice.css']
 })
-export class SingledeviceComponent implements OnInit {
-  deviceId: string | null = null;
+export class SingledeviceComponent {
+  device = {
+    nodeName: 'Node Device 1',
+    deviceName: 'Device 1',
+    location: 'Location 1',
+    model: '9GAK45A0123',
+    centralConnection: 'Central Device 1',
+    status: 'ON',
+    battery: 87,
+    deviceId: '1274930484',
+    version: 'Version 1.0',
+    history: [
+      { time: '1:23:45 PM', animal: 'Anvil 1', duration: '23 mins' },
+      { time: '2:10:12 PM', animal: 'Bird', duration: '15 mins' },
+      { time: '3:05:30 PM', animal: 'Rat', duration: '8 mins' }
+    ]
+  };
 
-  constructor(private route: ActivatedRoute) {}
-
-  ngOnInit(): void {
-    this.deviceId = this.route.snapshot.paramMap.get('id');
+  editDevice(device: any) {
+    console.log('Editing device:', device);
+    // TODO: Navigate to edit form or open modal
   }
-}
+} 
