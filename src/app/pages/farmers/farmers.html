@@ -1,31 +1,28 @@
 <div class="farmer-content">
+  <!-- Header -->
   <div class="header-section">
-    <div class="title-section">
+    <div>
       <h3>Farmers</h3>
       <h1>Farmers List</h1>
     </div>
-    <div class="actions-section">
-      <button class="add-btn" (click)="addFarmer()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 3.75C12.4142 3.75 12.75 4.08579 12.75 4.5V11.25H19.5C19.9142 11.25 20.25 11.5858 20.25 12C20.25 12.4142 19.9142 12.75 19.5 12.75H12.75V19.5C12.75 19.9142 12.4142 20.25 12 20.25C11.5858 20.25 11.25 19.9142 11.25 19.5V12.75H4.5C4.08579 12.75 3.75 12.4142 3.75 12C3.75 11.5858 4.08579 11.25 4.5 11.25H11.25V4.5C11.25 4.08579 11.5858 3.75 12 3.75Z" fill="white"/>
-        </svg>
-        Add Farmer
-      </button>
-    </div>
+    <button class="add-btn" (click)="addFarmer()">+ Add Farmer</button>
   </div>
 
+  <!-- Body -->
   <div class="body-container">
+    <!-- Search Box -->
     <div class="search-box">
-      <input type="text" [(ngModel)]="searchTerm" placeholder="Search Farmer Name" />
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Search farmer..." />
     </div>
 
+    <!-- Table -->
     <div class="table-container">
       <table>
         <thead>
           <tr>
-            <th>User Name</th>
-            <th>Number of Devices</th>
-            <th>Number of Active Devices</th>
+            <th>Name</th>
+            <th>Devices</th>
+            <th>Active Devices</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -33,8 +30,16 @@
           <tr *ngFor="let farmer of filteredFarmers()">
             <td>{{ farmer.name }}</td>
             <td>{{ farmer.deviceCount }}</td>
-            <td>{{ farmer.activeDeviceCount }}</td>
             <td>
+              <span
+                class="status"
+                [ngClass]="{ active: farmer.activeDeviceCount > 0, inactive: farmer.activeDeviceCount === 0 }"
+              ></span>
+              {{ farmer.activeDeviceCount }}
+            </td>
+            <td>
+              <button class="edit-btn" (click)="goToFarmer(farmer)">✎</button>
+              <button class="delete-btn" (click)="deleteFarmer(farmer)">🗑</button>
               <button class="edit-btn" (click)="editFarmer(farmers)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="24" viewBox="0 0 25 24" fill="none">
                   <path d="M22.2312 2.26884C21.206 1.24372 19.544 1.24372 18.5188 2.26884L17.3617 3.42599L21.074 7.1383L22.2312 5.98116C23.2563 4.95603 23.2563 3.29397 22.2312 2.26884Z" fill="#37612F"/>
