@@ -1,0 +1,29 @@
+
+.terms-conditions {
+   display: flex;
+    width: 1625px;
+    padding: 80px 115px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 60px;
+}
+
+.terms-conditions h1 {
+   margin: 0;
+    color: var(--New-group-shade6, #37612F);
+    font-family: Nunito;
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 60px;
+    /* 187.5% */
+}
+
+.terms-conditions p {
+   color: var(--New-group-shade6, #000000);
+    font-family: Nunito;
+    font-size: 21px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 60px;
+}

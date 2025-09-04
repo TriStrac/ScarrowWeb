@@ -10,6 +10,8 @@ import { ProfileComponent } from './pages/profile/profile';
 import { ReportComponent } from './pages/reports/reports';
 // Update the import path to match the actual file location and name
 import { SingleuserComponent } from './pages/farmers/singleuserpage/singleuser';
+import { TermsConditionsComponent } from './pages/termsconditions/termscondition';
+import { SubscriptionsComponent } from './pages/subscriptions/subscriptions';
 
 
 
@@ -29,6 +31,8 @@ export const routes: Routes = [
       { path: 'farmer/:id', component: SingleuserComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'reports', component: ReportComponent },
+      { path: 'termsconditions', component: TermsConditionsComponent },
+      { path: 'subscriptions', component: SubscriptionsComponent }
     ]
   }
 ];
