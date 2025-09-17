@@ -1,130 +1,113 @@
-.subscription-content {
-    display: flex;
+.main-container {
+    display: flex
+;
     width: 1625px;
     padding: 80px 115px;
     flex-direction: column;
     align-items: flex-start;
-    gap: 60px;
+    gap: 30px;
+    font-family: Nunito, sans-serif;
 }
 
 .header-section {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .header-section h3 {
-    margin: 0;
-    align-self: stretch;
-    color: var(--New-group-shade6, #37612F);
-    font-family: Nunito;
-    font-size: 20px;
-    font-style: normal;
-    font-weight: 800;
-    line-height: 40px;
-    /* 200% */
+  margin: 0;
+  align-self: stretch;
+  color: var(--New-group-shade6, #37612F);
+  font-family: Nunito;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 40px; /* 200% */
 }
 
 .header-section h1 {
-    margin: 0;
-    color: var(--New-group-shade6, #37612F);
-    font-family: Nunito;
-    font-size: 32px;
-    font-style: normal;
-    font-weight: 800;
-    line-height: 60px;
-    /* 187.5% */
+  margin: 0;
+  color: var(--New-group-shade6, #37612F);
+  font-family: Nunito;
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 60px; /* 187.5% */
 }
 
-
-.subscription-details {
-    display: flex;
-    width: 1350px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-}
-
-.subscription-header h1 {
+/*Section details*/
+.subscription details {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    align-self: stretch;
-
-    color: var(--New-group-shade6, #37612F);
-    font-family: Nunito;
-    font-size: 20px;
-    font-style: normal;
-    font-weight: 800;
-    line-height: 40px;
-    /* 200% */
-}
-.subscription-option {
-   width: 1350px;
-    border: 4px solid #37612F;
-    border-radius: 8px;
-    overflow: hidden;
-    font-family: Nunito;
-    background-color: #fff;
-    width: 1325px;
-    height: 195px;
-    flex-shrink: 0;
-}
-
-
-.payment-section {
-    display: flex;
-    width: 1350px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-
-}
-
-
-.payment-header h1 {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    align-self: stretch;
-
-    color: var(--New-group-shade6, #37612F);
-    font-family: Nunito;
-    font-size: 20px;
-    font-style: normal;
-    font-weight: 800;
-    line-height: 40px;
-    /* 200% */
-}
-.current-payment {
-width: 1350px;
-    border: 4px solid #37612F;
-    border-radius: 8px;
-    overflow: hidden;
-    font-family: Nunito;
-    background-color: #fff;
-    width: 1325px;
-    height: 195px;
-    flex-shrink: 0;
-}
-.payment-options {
-    width: 1350px;
-    border: 4px solid #37612F;
-    border-radius: 8px;
-    overflow: hidden;
-    font-family: Nunito;
-    background-color: #fff;
-    width: 1325px;
-    height: 195px;
-    flex-shrink: 0;
-    
-}
-.option, .arrow {
-    display: inline-flex;
     align-items: center;
-    padding: 20px;
-    gap: 10px;
-    flex: none;
-    order: 0;
-    flex-grow: 0;
+    gap: 20px;
+}
+.section-title {
+    display: flex;
+  width: 1350px;
+  padding: 10px;
+  align-items: center;
+  gap: 10px;
+    color: var(--New-group-shade6, #37612F);
+  font-family: Nunito;
+  font-size: 20px;  
+  font-style: normal;
+}
+
+/* Shared box style */
+.subscription-box {
+    border: 1px solid #9CA98C;
+    border-radius: 4px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+    max-width: 1350px;           /* keeps both boxes aligned */
+}
+
+/* Box header (top part) */
+.box-header {
+    background: #F9FAF7;
+    padding: 16px 20px;
+}
+
+.box-header h3 {
+    margin: 0 0 5px 0;
+    font-family: Nunito;
+    font-style: normal;
+    font-size: 14px;
+    font-weight: 700;
+    color: #37612F;
+}
+
+.box-header p {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Action row (bottom part) */
+.box-action {
+    border-top: 1px solid #9CA98C;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-family: Nunito;
+    font-style: normal;
+    font-weight: 600;
+    color: #37612F;
+    cursor: pointer;
+}
+
+.box-action:hover {
+    background: #f3f6f1;
+}
+
+.arrow {
+    font-size: 18px;
+    color: #2d2d2d;
 }
