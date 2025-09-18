@@ -1,16 +1,6 @@
-<button
-  [ngClass]="{
-    'save-btn': type === 'save',
-    'add-btn': type === 'add',
-    'edit-btn': type === 'edit',
-    'delete-btn': type === 'delete'
-  }"
-  (click)="onClick()">
-
-  <!-- optional icon (if provided) -->
+<button (click)="onClick()" [ngClass]="type">
   <ng-container *ngIf="icon">
-    <span [innerHTML]="icon"></span>
+    <img [src]="icon" alt="icon" class="button-icon" />
   </ng-container>
-
   {{ label }}
 </button>

@@ -1,5 +1,4 @@
 <div class="farmer-content">
-  <!-- Header -->
   <div class="header-section">
     <div>
       <h3>Farmers</h3>
@@ -8,14 +7,11 @@
     <button class="add-btn" (click)="addFarmer()">+ Add Farmer</button>
   </div>
 
-  <!-- Body -->
   <div class="body-container">
-    <!-- Search Box -->
     <div class="search-box">
       <input type="text" [(ngModel)]="searchTerm" placeholder="Search farmer..." />
     </div>
 
-    <!-- Table -->
     <div class="table-container">
       <table>
         <thead>
@@ -28,16 +24,16 @@
         </thead>
         <tbody>
           <tr *ngFor="let farmer of filteredFarmers()">
-            <td>{{ farmer.name }}</td>
-            <td>{{ farmer.deviceCount }}</td>
-            <td>
+            <td data-label="Name">{{ farmer.name }}</td>
+            <td data-label="Devices">{{ farmer.deviceCount }}</td>
+            <td data-label="Active Devices">
               <span
                 class="status"
                 [ngClass]="{ active: farmer.activeDeviceCount > 0, inactive: farmer.activeDeviceCount === 0 }"
               ></span>
               {{ farmer.activeDeviceCount }}
             </td>
-            <td>
+            <td data-label="Actions">
               <button class="edit-btn" (click)="goToFarmer(farmer)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="24" viewBox="0 0 25 24" fill="none">
                   <path d="M22.2312 2.26884C21.206 1.24372 19.544 1.24372 18.5188 2.26884L17.3617 3.42599L21.074 7.1383L22.2312 5.98116C23.2563 4.95603 23.2563 3.29397 22.2312 2.26884Z" fill="#37612F"/>
@@ -45,7 +41,7 @@
                   <path d="M5.75 5.24999C4.09315 5.24999 2.75 6.59314 2.75 8.24999V18.75C2.75 20.4068 4.09315 21.75 5.75 21.75H16.25C17.9069 21.75 19.25 20.4068 19.25 18.75V13.5C19.25 13.0858 18.9142 12.75 18.5 12.75C18.0858 12.75 17.75 13.0858 17.75 13.5V18.75C17.75 19.5784 17.0784 20.25 16.25 20.25H5.75C4.92157 20.25 4.25 19.5784 4.25 18.75V8.24999C4.25 7.42156 4.92157 6.74999 5.75 6.74999H11C11.4142 6.74999 11.75 6.41421 11.75 5.99999C11.75 5.58578 11.4142 5.24999 11 5.24999H5.75Z" fill="#37612F"/>
                 </svg>
               </button>
-              <button class="delete-btn" (click)="deleteFarmer(farmers)">
+              <button class="delete-btn" (click)="deleteFarmer(farmer)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="24" viewBox="0 0 25 24" fill="none">
                   <path fill-rule="evenodd" clip-rule="evenodd" d="M17.0001 4.47819V4.70498C17.9548 4.79237 18.9017 4.90731 19.8398 5.04898C20.1871 5.10143 20.5332 5.15755 20.8781 5.2173C21.2863 5.28799 21.5598 5.67617 21.4891 6.0843C21.4184 6.49244 21.0302 6.76598 20.6221 6.69529C20.5525 6.68323 20.4829 6.67132 20.4131 6.65957L19.4077 19.7301C19.2875 21.2931 17.9842 22.5 16.4166 22.5H8.58369C7.01608 22.5 5.71276 21.2931 5.59253 19.7301L4.5871 6.65957C4.5174 6.67132 4.44774 6.68323 4.37813 6.69529C3.97 6.76598 3.58183 6.49244 3.51113 6.0843C3.44043 5.67617 3.71398 5.28799 4.12211 5.2173C4.46701 5.15755 4.81315 5.10143 5.16048 5.04898C6.09858 4.90731 7.0454 4.79237 8.00012 4.70498V4.47819C8.00012 2.91371 9.21265 1.57818 10.8156 1.52691C11.3749 1.50901 11.9365 1.5 12.5001 1.5C13.0638 1.5 13.6253 1.50901 14.1847 1.52691C15.7876 1.57818 17.0001 2.91371 17.0001 4.47819ZM10.8635 3.02614C11.4069 3.00876 11.9525 3 12.5001 3C13.0478 3 13.5934 3.00876 14.1367 3.02614C14.8913 3.05028 15.5001 3.68393 15.5001 4.47819V4.59082C14.5078 4.53056 13.5075 4.5 12.5001 4.5C11.4928 4.5 10.4925 4.53056 9.50012 4.59082V4.47819C9.50012 3.68393 10.1089 3.05028 10.8635 3.02614ZM10.5087 8.97118C10.4928 8.55727 10.1444 8.23463 9.73045 8.25055C9.31654 8.26647 8.99391 8.61492 9.00983 9.02882L9.35599 18.0288C9.3719 18.4427 9.72035 18.7654 10.1343 18.7494C10.5482 18.7335 10.8708 18.3851 10.8549 17.9712L10.5087 8.97118ZM15.9895 9.02882C16.0054 8.61492 15.6828 8.26647 15.2689 8.25055C14.855 8.23463 14.5065 8.55727 14.4906 8.97118L14.1444 17.9712C14.1285 18.3851 14.4512 18.7335 14.8651 18.7494C15.279 18.7654 15.6274 18.4427 15.6433 18.0288L15.9895 9.02882Z" fill="#B81010"/>
                 </svg>
@@ -56,4 +52,94 @@
       </table>
     </div>
   </div>
+
+  <!-- Add Farmer Modal -->
+  <app-modal [isOpen]="isModalOpen" title="Farmer" (close)="closeModal()">
+    <form class="modal-form">
+
+      <!-- Name -->
+      <div class="form-group">
+        <label>Name</label>
+        <div class="input-group simple-input">
+          <input type="text" [(ngModel)]="newFarmer.name" name="name"
+                 placeholder="New Farmer" class="input-field" />
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label>Email</label>
+        <div class="input-group simple-input">
+          <input type="email" [(ngModel)]="newFarmer.email" name="email"
+                 placeholder="farmer@email.com" class="input-field" />
+        </div>
+      </div>
+
+      <!-- Phone Number -->
+      <div class="form-group">
+        <label>Phone Number</label>
+        <div class="input-group">
+          <input type="tel" [(ngModel)]="newFarmer.phone" name="phone"
+                 placeholder="(+63) 923 456 1234" class="input-field"
+                 [readonly]="!editModes.phone" [class.editable]="editModes.phone" />
+          <button type="button" class="change-btn" (click)="toggleEditMode('phone')">
+            {{ editModes.phone ? 'Save' : 'Change' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="form-group">
+        <label>Address</label>
+        <div class="input-group">
+          <input type="text" [(ngModel)]="newFarmer.address" name="address"
+                 placeholder="Mandaue City, Cebu" class="input-field"
+                 [readonly]="!editModes.address" [class.editable]="editModes.address" />
+          <button type="button" class="change-btn" (click)="toggleEditMode('address')">
+            {{ editModes.address ? 'Save' : 'Change' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-group">
+          <input [type]="editModes.password ? (showPassword ? 'text' : 'password') : 'password'"
+                 [(ngModel)]="newFarmer.password" name="password"
+                 placeholder="••••••••••" class="input-field"
+                 [readonly]="!editModes.password" [class.editable]="editModes.password" />
+          <button type="button" class="change-btn" (click)="toggleEditMode('password')">
+            {{ editModes.password ? 'Save' : 'Change' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <div class="input-group">
+          <input [type]="showConfirmPassword ? 'text' : 'password'"
+                 [(ngModel)]="newFarmer.confirmPassword" name="confirmPassword"
+                 placeholder="••••••••••" class="input-field" />
+          <button type="button" class="eye-btn" (click)="toggleConfirmPasswordVisibility()">
+            <svg *ngIf="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg *ngIf="showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Create User Button -->
+    <div class="form-footer">
+      <button type="button" class="save-btn create-user-btn" (click)="createUser()">Create User</button>
+    </div>
+  </app-modal>
 </div>
