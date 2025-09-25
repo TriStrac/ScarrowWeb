@@ -1,0 +1,6 @@
+<button (click)="onClick()" [ngClass]="type">
+  <ng-container *ngIf="icon">
+    <img [src]="icon" alt="icon" class="button-icon" />
+  </ng-container>
+  {{ label }}
+</button>
