@@ -4,44 +4,90 @@
   <!-- Filters -->
   <div class="filters">
     <div class="filter-row">
-      <select [(ngModel)]="selectedDevice" (change)="filterData()">
-        <option *ngFor="let device of devices" [value]="device">{{ device }}</option>
-      </select>
+      <!-- Device Filter with Tags -->
+      <div class="filter-group">
+        <div class="filter-controls">
+          <select [(ngModel)]="tempSelectedDevice" (change)="addDeviceTag($event)">
+            <option value="">Devices</option>
+            <option *ngFor="let device of devices" [value]="device">{{ device }}</option>
+          </select>
+        </div>
+        <div class="selected-tags" *ngIf="selectedDevices.length > 0">
+          <div class="tag" *ngFor="let device of selectedDevices">
+            {{ device }}
+            <button class="remove-tag" (click)="removeDeviceTag(device)">×</button>
+          </div>
+        </div>
+      </div>
 
-      <select [(ngModel)]="selectedLocation" (change)="filterData()">
-        <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
-      </select>
+      <!-- Location Filter with Tags -->
+      <div class="filter-group">
+        <div class="filter-controls">
+          <select [(ngModel)]="tempSelectedLocation" (change)="addLocationTag($event)">
+            <option value="">Location</option>
+            <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
+          </select>
+        </div>
+        <div class="selected-tags" *ngIf="selectedLocations.length > 0">
+          <div class="tag" *ngFor="let location of selectedLocations">
+            {{ location }}
+            <button class="remove-tag" (click)="removeLocationTag(location)">×</button>
+          </div>
+        </div>
+      </div>
 
-      <input type="date" [(ngModel)]="startDate" (change)="filterData()">
-      <input type="date" [(ngModel)]="endDate" (change)="filterData()">
+      <!-- Search Input -->
+      <div class="search-container">
+        <input type="text" [(ngModel)]="searchName" placeholder="Search Farmer Name/Device Name" (input)="filterData()">
+      </div>
+    </div>
 
-      <input type="text" [(ngModel)]="searchName" placeholder="Search Farmer Name/Device Name" (input)="filterData()">
+    <!-- Date Section -->
+    <div class="date-section">
+      <div class="date-input-group">
+        <span class="date-label">Start Date</span>
+        <input type="date" [(ngModel)]="startDate" (change)="filterData()">
+        <button class="clear-date" (click)="clearStartDate()" *ngIf="startDate">×</button>
+      </div>
+
+      <div class="date-input-group">
+        <span class="date-label">End Date</span>
+        <input type="date" [(ngModel)]="endDate" (change)="filterData()">
+        <button class="clear-date" (click)="clearEndDate()" *ngIf="endDate">×</button>
+      </div>
     </div>
   </div>
 
-  <!-- Pest Detected -->
-  <div class="pest-card">
-    <h3>Most Pest Detected:</h3>
-    <div *ngFor="let pest of mostPests" class="pest-item">
-      {{ pest.name }} ({{ pest.count }})
-    </div>
-  </div>
+  <!-- Main Content: Left (pests/totals) + Right (chart) -->
+  <div class="report-content">
+    <div class="left-section">
+      <!-- Pest Detected -->
+      <div class="pest-card">
+        <h3>Most Pest Detected:</h3>
+        <div *ngFor="let pest of mostPests" class="pest-item">
+          {{ pest.name }}
+        </div>
+      </div>
 
-  <!-- Totals -->
-  <div class="totals">
-    <div class="total-box">
-      <h4>Total Triggered Times:</h4>
-      <p>{{ totalTriggered }}</p>
+      <!-- Totals -->
+      <div class="totals">
+        <div class="total-box">
+          <h4>Total Triggered Times:</h4>
+          <p>{{ totalTriggered }}</p>
+        </div>
+        <div class="total-box">
+          <h4>Total Activate Times:</h4>
+          <p>{{ totalActive }} mins</p>
+        </div>
+      </div>
     </div>
-    <div class="total-box">
-      <h4>Total Active Times:</h4>
-      <p>{{ totalActive }} mins</p>
-    </div>
-  </div>
 
-  <!-- Chart -->
-  <div class="chart-box">
-    <h3>Device Summary Analysis</h3>
-    <canvas id="reportChart"></canvas>
+    <div class="right-section">
+      <!-- Chart -->
+      <div class="chart-box">
+        <h3>Device Summary Analysis</h3>
+        <canvas id="reportChart"></canvas>
+      </div>
+    </div>
   </div>
 </div>

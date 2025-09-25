@@ -1,16 +1,28 @@
+/*
+  Responsive Profile Dashboard Styles
+  - Replaced fixed widths with fluid percentages and max-widths.
+  - Implemented a responsive two-column layout that stacks on smaller screens.
+  - Adjusted padding, gaps, and font sizes for a better mobile experience.
+*/
+
 .profile-container {
   display: flex;
-  width: 1625px;
-  padding: 80px 115px 60px;
+  width: 100%;
+  max-width: 1625px;
+  padding: 80px 5% 60px; /* Use a percentage for flexible padding */
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 30px;
+  box-sizing: border-box; /* Ensures padding is included in the element's total width and height */
+  margin: 0 auto; /* Centers the container */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .header-section {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
+  width: 100%;
 }
 
 .header-section h3 {
@@ -21,7 +33,7 @@
   font-size: 20px;
   font-style: normal;
   font-weight: 800;
-  line-height: 40px; /* 200% */
+  line-height: 40px;
 }
 
 .header-section h1 {
@@ -31,21 +43,24 @@
   font-size: 32px;
   font-style: normal;
   font-weight: 800;
-  line-height: 60px; /* 187.5% */
+  line-height: 60px;
 }
 
 .profile-header {
   display: flex;
-  width: 1350px;
+  width: 100%;
   padding: 10px;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
+  flex-wrap: wrap; /* Allows the content to wrap on small screens */
+  justify-content: space-between;
 }
 
 .user-container {
   display: flex;
   align-items: center;
-  flex: 1 0 0;
+  gap: 15px;
+  flex: 1; /* Allows the container to grow and shrink */
 }
 
 .user-info {
@@ -63,7 +78,7 @@
   font-size: 16px;
   font-style: normal;
   font-weight: 800;
-  line-height: 24px; /* 150% */
+  line-height: 24px;
 }
 
 .user-info p {
@@ -74,65 +89,61 @@
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
-  line-height: 20px; /* 142.857% */
+  line-height: 20px;
 }
 
 .edit-btn {
   border-radius: 8px;
   background: var(--Experiment-Color, #49674B);
-
-  /* shadow1 */
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
-
   border: none;
-
   display: flex;
   padding: 10px 24px;
   align-items: center;
   gap: 10px;
-
   color: #FFF;
   text-align: center;
   font-family: Nunito;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
-  line-height: 24px; /* 150% */
+  line-height: 24px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.edit-btn:hover {
+  background: #37612F;
 }
 
 .profile-form {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 100px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 50px;
+  width: 100%;
+  justify-items: center;
 }
 
 .divider {
   display: flex;
-  width: auto;
+  width: 100%;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 80px;
+  align-items: center;
+  gap: 40px;
 }
 
-.left-col {
-  display: flex;
-  width: 625px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 30px;
-}
-
+.left-col,
 .right-col {
   display: flex;
-  width: 625px;
   flex-direction: column;
   align-items: flex-start;
-  gap: 30px;
+  gap: 20px;
+  width: 100%;
+  max-width: 625px;
 }
 
-.info-container{
+.info-container {
   display: flex;
-  height: 70px;
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
@@ -147,19 +158,18 @@
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
-  line-height: 20px; /* 142.857% */
+  line-height: 20px;
 }
 
 .left-col input,
 .right-col input {
   flex: 1 0 0;
-
   color: var(--Experiment-Color-2, #627D5D);
   font-family: Nunito;
   font-size: 16px;
   font-style: normal;
   font-weight: 400;
-  line-height: 24px; /* 150% */
+  line-height: 24px;
 }
 
 .input-row {
@@ -169,12 +179,9 @@
   align-items: center;
   gap: 8px;
   align-self: stretch;
-
   border-radius: 8px;
   border: 1px solid var(--Gray-300, #D5D7DA);
   background: var(--Base-White, #FFF);
-
-  /* Shadow/xs */
   box-shadow: 0 1px 2px 0 rgba(10, 13, 18, 0.05);
 }
 
@@ -187,16 +194,32 @@
 input:focus {
   border: none;
   outline: none;
-  box-shadow: none; /* removes any glow/shadow */
+  box-shadow: none;
 }
+
 .left-col button,
 .right-col button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
   color: var(--New-group-shade6, #37612F);
   font-family: Nunito;
   font-size: 16px;
   font-style: normal;
   font-weight: 400;
-  line-height: 24px; /* 150% */
+  line-height: 24px;
+  transition: color 0.3s ease;
+}
+
+.left-col button:hover,
+.right-col button:hover {
+  color: #49674B;
+}
+
+.save-btn-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .save-btn {
@@ -206,20 +229,87 @@ input:focus {
   justify-content: center;
   align-items: center;
   gap: 8px;
-
   border-radius: 8px;
   background: var(--Experiment-Color, #49674B);
-
-  /* shadow1 */
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
-
   color: #FFF;
   text-align: center;
   border: none;
-  /* Roboto Medium H3 */
   font-family: Roboto;
   font-size: 14px;
   font-style: normal;
   font-weight: 500;
-  line-height: 20px; /* 142.857% */
+  line-height: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
+
+.save-btn:hover {
+  background: #37612F;
+}
+
+/* Media Queries for Responsiveness */
+
+@media (max-width: 1024px) {
+  .profile-container {
+    padding: 40px 20px;
+    gap: 20px;
+  }
+  .profile-form {
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 20px 10px;
+    gap: 15px;
+  }
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  .user-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .user-info {
+    align-items: center;
+    gap: 2px;
+  }
+  .header-section h1 {
+    font-size: 28px;
+    line-height: 50px;
+  }
+  .edit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .profile-form {
+    gap: 20px;
+  }
+  .divider {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-container {
+    padding: 10px;
+  }
+  .user-info h4 {
+    font-size: 14px;
+  }
+  .user-info p {
+    font-size: 12px;
+  }
+  .edit-btn {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+  .input-row {
+    padding: 8px 12px;
+  }
+}
+

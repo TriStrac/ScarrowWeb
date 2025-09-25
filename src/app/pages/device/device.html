@@ -20,18 +20,18 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor ="let device of filteredDevices()">
-            <td>
+          <tr *ngFor="let device of filteredDevices()">
+            <td data-label="Device Name">
               <a href="javascript:void(0)" (click)="goToDevice(device.id)">
                 {{ device.name }}
               </a>
             </td>
-            <td>
+            <td data-label="Status">
               <span class="status" [ngClass]="device.status.toLowerCase()"></span>
               {{ device.status }}
             </td>
-            <td>{{ device.lastActivated }}</td>
-            <td>
+            <td data-label="Last Time Activated">{{ device.lastActivated }}</td>
+            <td data-label="Actions">
               <button class="edit-btn" (click)="editDevice(device)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="24" viewBox="0 0 25 24" fill="none">
                   <path d="M22.2312 2.26884C21.206 1.24372 19.544 1.24372 18.5188 2.26884L17.3617 3.42599L21.074 7.1383L22.2312 5.98116C23.2563 4.95603 23.2563 3.29397 22.2312 2.26884Z" fill="#37612F"/>

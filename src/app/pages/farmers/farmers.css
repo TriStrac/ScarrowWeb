@@ -1,15 +1,24 @@
+/*
+  This CSS file has been updated to be fully responsive.
+  Fixed widths are replaced with percentages, and flexbox is used
+  to create a fluid layout that adapts to any screen size.
+*/
 .farmer-content {
+  /* Use a relative width and max-width for responsiveness */
+  width: 90%;
+  max-width: 1625px;
+  margin: auto;
+  padding: 80px 5%; /* Use a percentage for padding */
   display: flex;
-  width: 1625px;
-  padding: 80px 115px;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center; /* Center the content horizontally */
   gap: 60px;
 }
 
 .header-section {
   display: flex;
-  width: 1350px;
+  /* Use 100% width to fill the container */
+  width: 100%;
   justify-content: space-between;
   align-items: flex-end;
 }
@@ -22,7 +31,7 @@
   font-size: 20px;
   font-style: normal;
   font-weight: 800;
-  line-height: 40px; /* 200% */
+  line-height: 40px;
 }
 
 .header-section h1 {
@@ -32,12 +41,13 @@
   font-size: 32px;
   font-style: normal;
   font-weight: 800;
-  line-height: 60px; /* 187.5% */
+  line-height: 60px;
 }
 
 .body-container {
   display: flex;
-  width: 1350px;
+  /* Use 100% width to fill the container */
+  width: 100%;
   flex-direction: column;
   align-items: flex-start;
   gap: 20px;
@@ -50,52 +60,58 @@
   align-items: center;
   gap: 10px;
   align-self: stretch;
-
   border-radius: 4px;
   border: 0.5px solid var(--Experiment-Color-2, #627D5D);
 }
 
 .search-box input {
-  display: flex;
-  width: 1330px;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
+  /* Use flex-grow to make the input fill the available space */
+  flex-grow: 1;
   border: none;
 }
 
 input:focus {
   border: none;
   outline: none;
-  box-shadow: none; /* removes any glow/shadow */
+  box-shadow: none;
+}
+
+.table-container {
+  /* Allow the table to be horizontally scrollable on small screens if it overflows */
+  width: 100%;
+  overflow-x: auto;
 }
 
 .table-container table {
-  width: 1350px;
+  /* Table width is 100% of its container */
+  width: 100%;
+  /* Optional: Set a minimum width to prevent columns from getting too narrow */
+  min-width: 600px;
   border-collapse: collapse;
-
   border-radius: 4px;
   border: 1px solid var(--Experiment-Color-2, #627D5D);
   background: var(--offwhite, #FAF9F6);
 }
-.table-container thead tbody{
+
+.table-container thead tbody {
   display: flex;
   align-items: flex-start;
   align-self: stretch;
-
-  background: rgba(255, 255, 255, 0.00);
+  background: rgba(255, 255, 255, 0);
   text-decoration: none;
 }
-.table-container th{
+
+.table-container th {
   color: var(--New-group-shade6, #37612F);
   font-family: Nunito;
   font-size: 16px;
   font-style: normal;
   font-weight: 700;
-  line-height: 24px; /* 150% */
+  line-height: 24px;
   flex: 1 0 0;
   text-decoration: none;
 }
+
 .table-container th,
 .table-container td {
   padding: 15px;
@@ -141,20 +157,70 @@ input:focus {
   border-radius: 8px;
   background: var(--Experiment-Color, #49674B);
   border: none;
-
-  /* shadow1 */
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
-
   display: flex;
   padding: 10px 24px;
   align-items: center;
   gap: 10px;
-
   color: #FFF;
   text-align: center;
   font-family: Nunito;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
-  line-height: 24px; /* 150% */
+  line-height: 24px;
+}
+
+/* Media Queries for Mobile Responsiveness 📱 */
+@media (max-width: 768px) {
+  .farmer-content {
+    padding: 40px 20px;
+    gap: 30px;
+  }
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .header-section h1 {
+    font-size: 24px;
+    line-height: 40px;
+  }
+  .header-section h3 {
+    font-size: 16px;
+  }
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .table-container table,
+  .table-container thead,
+  .table-container tbody,
+  .table-container th,
+  .table-container td,
+  .table-container tr {
+    display: block;
+  }
+  .table-container thead {
+    display: none;
+  }
+  .table-container tr {
+    margin-bottom: 15px;
+    border: 1px solid #2d4415;
+    border-radius: 4px;
+  }
+  .table-container td {
+    border: none;
+    position: relative;
+    padding-left: 50%;
+    text-align: right;
+  }
+  .table-container td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 15px;
+    width: calc(50% - 30px);
+    text-align: left;
+    font-weight: bold;
+  }
 }
