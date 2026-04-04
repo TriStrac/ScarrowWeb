@@ -8,7 +8,15 @@
 
   <div class="signup-form-wrapper">
     <!-- Logo only on Step 1 -->
-    <img *ngIf="step === 1" src="assets/logo.png" alt="Scarrow logo" class="logo" width="120" height="120" />
+    <div *ngIf="step === 1" class="signup-brand-lockup">
+      <img
+        src="assets/scarrow-final_logo.png"
+        alt="Scarrow — rice field pest defense"
+        class="signup-brand-logo"
+        width="240"
+        height="100"
+      />
+    </div>
 
     <!-- Step 1 -->
     <div class="step1-form-wrapper" *ngIf="step === 1">
