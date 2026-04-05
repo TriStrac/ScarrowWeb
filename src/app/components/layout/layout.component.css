@@ -1,8 +1,10 @@
 :host {
   display: flex;
-  height: 100vh; /* Full height of the viewport */
-  width: 100vw;  /* Full width of the viewport */
-  overflow: hidden; /* Prevent double scrollbars */
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .page-layout {
@@ -13,11 +15,71 @@
   overflow: hidden;
 }
 
+.page-layout--messages {
+  background: #fff;
+}
+
+@media (max-width: 767px) {
+  .page-layout--messages {
+    background: #f9eddd;
+  }
+}
+
+.layout-sidebar {
+  display: block;
+}
+
 .main-content {
   flex: 1;
-  overflow-y: auto; /* Page scrollbar applies here */
-  overflow-x: hidden; /* Page scrollbar applies here */
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  background: #f9eddd;
+}
+
+/* Messages: white chrome; routed view fills height so inbox can scroll on mobile */
+.main-content--messages {
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.main-content--messages app-messages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile only: match Messages shell beige; desktop keeps white chrome */
+@media (max-width: 767px) {
+  .main-content--messages {
+    background: #f9eddd;
+  }
+}
+
+@media (min-width: 769px) {
+  .main-content {
+    padding: 0 1.25rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    padding: 0 1.75rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-sidebar {
+    display: none;
+  }
+
+  .main-content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }

@@ -1,0 +1,232 @@
+<div class="app-page organization-page">
+  <!-- Mobile: compact green title bar -->
+  <header class="org-header org-header--mobile">
+    <h1 class="org-header__title">Organization</h1>
+  </header>
+
+  <!-- Web: page intro -->
+  <header class="org-page-intro org-page-intro--desktop">
+    <h1 class="org-page-intro__title">Organization</h1>
+    <p class="org-page-intro__lead">Members, roles, and access for your Scarrow workspace.</p>
+  </header>
+
+  <div class="org-layout">
+    <section class="org-info-card" aria-label="Organization details">
+      <div class="org-info-card__text">
+        <span class="org-info-card__label">Organization name</span>
+        <span class="org-info-card__name">{{ organizationName }}</span>
+      </div>
+      <div class="org-info-card__actions">
+        <button type="button" class="org-btn org-btn--ghost" aria-label="Edit organization">
+          <svg class="org-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+          Edit
+        </button>
+        <button type="button" class="org-btn org-btn--icon" aria-label="Organization menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="12" cy="6" r="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="12" cy="18" r="1.5" />
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <section class="org-members" aria-labelledby="org-members-heading">
+      <div class="org-members__head">
+        <h2 id="org-members-heading" class="org-members__title">Members</h2>
+        <p class="org-members__hint">
+          Click a member to view profile and actions. Organization admins can remove someone from the detail panel.
+        </p>
+      </div>
+
+      <button type="button" class="org-invite-card">
+        <span class="org-invite-card__icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </span>
+        <span class="org-invite-card__copy">
+          <span class="org-invite-card__headline">Invite members</span>
+          <span class="org-invite-card__sub">Search by name or username. Copy your invite code from the menu (···).</span>
+        </span>
+        <svg class="org-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+
+      @if (isOrgAdmin && joinRequests().length > 0) {
+        <section id="join-requests" class="org-join-requests" aria-labelledby="org-join-heading">
+          <div class="org-join-requests__head">
+            <h3 id="org-join-heading" class="org-join-requests__title">Requests to join</h3>
+            <p class="org-join-requests__hint">Approve to add them as members, or decline to dismiss.</p>
+          </div>
+          <ul class="org-join-requests__list" role="list">
+            @for (r of joinRequests(); track r.id) {
+              <li class="org-join-requests__row">
+                <div class="org-join-requests__who">
+                  <span class="org-join-requests__name">{{ r.name }}</span>
+                  <span class="org-join-requests__user">{{ r.username }}</span>
+                  <span class="org-join-requests__time">{{ joinRequestRelativeTime(r.requestedAt) }}</span>
+                </div>
+                <div class="org-join-requests__actions">
+                  <button type="button" class="org-join-requests__btn org-join-requests__btn--ghost" (click)="declineJoinRequest(r)">
+                    Decline
+                  </button>
+                  <button type="button" class="org-join-requests__btn org-join-requests__btn--primary" (click)="approveJoinRequest(r)">
+                    Approve
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <ul class="org-member-list">
+        @for (m of members; track m.id) {
+          <li>
+            <button type="button" class="org-member-card" (click)="openMemberModal(m)">
+              <span class="org-member-card__avatar" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </span>
+              <span class="org-member-card__text">
+                <span class="org-member-card__name">{{ m.name }}</span>
+                <span class="org-member-card__username">{{ m.username }}</span>
+                <span class="org-member-card__role">{{ m.role }}</span>
+              </span>
+              <svg class="org-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+</div>
+
+@if (selectedMember; as member) {
+  <div
+    class="org-member-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="org-member-dialog-title"
+    (click)="onBackdropClick($event)"
+  >
+    <div class="org-member-modal__card org-dialog" (click)="$event.stopPropagation()">
+      <header class="org-dialog__header">
+        <div class="org-dialog__header-left">
+          <div class="org-dialog__avatar" aria-hidden="true">{{ nameInitial(member) }}</div>
+          <div class="org-dialog__header-main">
+            <h2 id="org-member-dialog-title" class="org-dialog__title">{{ member.name }}</h2>
+            <div class="org-dialog__meta">
+              <span class="org-dialog__subtitle">Member details</span>
+              <span class="org-dialog__chip">{{ member.roleBadge }}</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="org-dialog__close" (click)="closeMemberModal()" aria-label="Close dialog">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </header>
+
+      <div class="org-dialog__body">
+        <h3 class="org-dialog__section-title">Contact &amp; access</h3>
+        <div class="org-dialog__tiles">
+          <div class="org-dialog__tile">
+            <div class="org-dialog__tile-icon org-dialog__tile-icon--slate" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <span class="org-dialog__tile-label">Username</span>
+            <span class="org-dialog__tile-value">{{ member.username }}</span>
+          </div>
+          <div class="org-dialog__tile">
+            <div class="org-dialog__tile-icon org-dialog__tile-icon--emerald" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+            </div>
+            <span class="org-dialog__tile-label">Phone</span>
+            <span class="org-dialog__tile-value">{{ member.phone }}</span>
+          </div>
+          <div class="org-dialog__tile">
+            <div class="org-dialog__tile-icon org-dialog__tile-icon--amber" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <span class="org-dialog__tile-label">Org role</span>
+            <span class="org-dialog__tile-value">{{ member.role }}</span>
+          </div>
+        </div>
+
+        <div class="org-dialog__address">
+          <div class="org-dialog__address-accent" aria-hidden="true"></div>
+          <div class="org-dialog__address-inner">
+            <div class="org-dialog__address-head">
+              <span class="org-dialog__address-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 21s-8-4.5-8-11a8 8 0 0 1 16 0c0 6.5-8 11-8 11z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </span>
+              <span class="org-dialog__address-title">Address</span>
+            </div>
+            <p class="org-dialog__address-text">{{ member.address }}</p>
+          </div>
+        </div>
+
+        <div class="org-dialog__device">
+          <div class="org-dialog__device-glow" aria-hidden="true"></div>
+          <div class="org-dialog__device-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+              <rect x="6" y="3" width="12" height="18" rx="2.5" />
+              <path d="M10 18h4" />
+            </svg>
+          </div>
+          <div class="org-dialog__device-text">
+            <span class="org-dialog__device-label">Registered devices</span>
+            <span class="org-dialog__device-count">{{ member.registeredDeviceCount }}</span>
+          </div>
+        </div>
+
+        <div class="org-dialog__footer">
+          <a [routerLink]="['/farmer', member.id]" class="org-dialog__link" (click)="closeMemberModal()">
+            <span>Full profile</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M7 17 17 7M7 7h10v10" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+          <button type="button" class="org-dialog__btn org-dialog__btn--primary" (click)="messageMember()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <path d="m22 6-10 7L2 6" />
+            </svg>
+            Message
+          </button>
+        </div>
+
+        @if (canRemoveSelected()) {
+          <button type="button" class="org-dialog__danger" (click)="removeSelectedFromOrg()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+            Remove from organization
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

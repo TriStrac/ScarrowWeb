@@ -1,6 +1,7 @@
-<div class="page-layout">
-  <app-sidebar></app-sidebar>
-  <main class="main-content">
+<div class="page-layout" [class.page-layout--messages]="isMessagesRoute">
+  <app-sidebar class="layout-sidebar"></app-sidebar>
+  <main class="main-content" [class.main-content--messages]="isMessagesRoute">
     <router-outlet></router-outlet>
   </main>
+  <app-mobile-nav class="layout-mobile-nav"></app-mobile-nav>
 </div>

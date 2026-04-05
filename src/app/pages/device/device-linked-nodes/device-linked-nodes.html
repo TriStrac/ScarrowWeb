@@ -1,0 +1,65 @@
+<div class="ln-page">
+  <header class="ln-header">
+    <button type="button" class="ln-back" (click)="goBack()" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <h1 class="ln-title">Linked nodes</h1>
+  </header>
+
+  @if (central; as c) {
+    <div class="ln-content">
+    <section class="ln-section" aria-labelledby="ln-pairing-label">
+      <h2 id="ln-pairing-label" class="ln-label">Pairing</h2>
+      <div class="ln-card ln-card--central">
+        <div class="ln-central">
+          <div class="ln-central__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="4" y="6" width="16" height="12" rx="2" />
+              <path d="M8 10h8M8 14h5" stroke-linecap="round" />
+              <circle cx="17" cy="9" r="1" fill="currentColor" stroke="none" />
+            </svg>
+          </div>
+          <div class="ln-central__body">
+            <span class="ln-central__kind">Central Device</span>
+            <span class="ln-central__name">{{ c.centralName }}</span>
+            <span
+              class="ln-central__status"
+              [class.ln-central__status--active]="c.status === 'Active'"
+              [class.ln-central__status--inactive]="c.status !== 'Active'"
+            >
+              <span class="ln-central__dot" aria-hidden="true"></span>
+              {{ c.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ln-section" aria-labelledby="ln-nodes-label">
+      <h2 id="ln-nodes-label" class="ln-label">Node devices</h2>
+      <div class="ln-card ln-card--nodes">
+        @if (c.linkedNodeCount === 0) {
+          <div class="ln-empty">
+            <div class="ln-empty__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <rect x="7" y="7" width="10" height="10" rx="1.5" />
+                <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <p class="ln-empty__text">No node devices yet.</p>
+          </div>
+        } @else {
+          <p class="ln-nodes-summary">{{ c.linkedNodeCount }} node device(s) linked.</p>
+        }
+      </div>
+    </section>
+    </div>
+  } @else {
+    <div class="ln-missing">
+      <p class="ln-missing__text">This central device was not found.</p>
+      <button type="button" class="ln-missing__btn" (click)="goBack()">Go back</button>
+    </div>
+  }
+</div>

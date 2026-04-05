@@ -1,142 +1,148 @@
-<div class="device-content" *ngIf="device">
-  <!-- Header Section -->
-  <div class="header-section">
-    <div class="device-header">
-      <h3>Devices</h3>
-      <h1 class="green-text">{{ device.nodeName }}</h1>
+<div class="sd-page" *ngIf="device">
+  <header class="sd-hero">
+    <div class="sd-hero__row">
+      <button type="button" class="sd-back" (click)="goBack()" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <div class="sd-hero__copy">
+        <p class="sd-kicker">Devices</p>
+        <h1 class="sd-title">{{ device.nodeName }}</h1>
+      </div>
+      <button type="button" class="sd-edit" (click)="editDevice()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+        Edit device
+      </button>
     </div>
+  </header>
 
-    <!-- Edit Button -->
-    <button class="edit-button" (click)="editDevice()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-        <path d="M21.73 2.27c-1.02-1.02-2.68-1.02-3.71 0l-1.16 1.16 3.71 3.71 1.16-1.16c1.02-1.02 1.02-2.68 0-3.71z"
-          fill="white" />
-        <path
-          d="M19.51 8.2L15.8 4.49 7.4 12.89c-.62.62-1.08 1.38-1.3 2.22l-.8 2.68c-.08.26 0 .55.2.75.2.2.49.28.75.2l2.68-.8c.84-.22 1.6-.68 2.22-1.3L19.51 8.2z"
-          fill="white" />
-        <path
-          d="M5.25 5.25c-1.66 0-3 1.34-3 3v10.5c0 1.66 1.34 3 3 3h10.5c1.66 0 3-1.34 3-3V13.5c0-.41-.34-.75-.75-.75s-.75.34-.75.75v5.25c0 .83-.67 1.5-1.5 1.5H5.25c-.83 0-1.5-.67-1.5-1.5V8.25c0-.83.67-1.5 1.5-1.5H10.5c.41 0 .75-.34.75-.75S10.91 5.25 10.5 5.25H5.25z"
-          fill="white" />
-      </svg>
-      Edit Device
-    </button>
+  <div class="sd-body">
+    <section class="sd-card" aria-labelledby="sd-details-heading">
+      <h2 id="sd-details-heading" class="sd-card__title">Device details</h2>
+      <dl class="sd-detail-grid">
+        <div class="sd-field">
+          <dt class="sd-field__label">Device name</dt>
+          <dd class="sd-field__value">{{ device.deviceName }}</dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Status</dt>
+          <dd class="sd-field__value">
+            <span class="sd-pill" [class.sd-pill--on]="device.status === 'ON'" [class.sd-pill--off]="device.status === 'OFF'">
+              {{ device.status }}
+            </span>
+          </dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Location</dt>
+          <dd class="sd-field__value">{{ device.location }}</dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Battery</dt>
+          <dd class="sd-field__value">
+            <span [class.sd-battery--high]="device.battery > 50" [class.sd-battery--low]="device.battery <= 50">
+              {{ device.battery }}%
+            </span>
+          </dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Model</dt>
+          <dd class="sd-field__value">{{ device.model }}</dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Device ID</dt>
+          <dd class="sd-field__value sd-field__value--mono">{{ device.deviceId }}</dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Central connection</dt>
+          <dd class="sd-field__value">{{ device.centralConnection }}</dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Firmware / updates</dt>
+          <dd class="sd-field__value">{{ device.version }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="sd-card" *ngIf="device.history && device.history.length > 0" aria-labelledby="sd-history-heading">
+      <h2 id="sd-history-heading" class="sd-card__title">Device history</h2>
+      <div class="sd-table-wrap">
+        <table class="sd-table">
+          <thead>
+            <tr>
+              <th scope="col">Time triggered</th>
+              <th scope="col">Animal detected</th>
+              <th scope="col">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of device.history">
+              <td>{{ log.time }}</td>
+              <td>{{ log.animal }}</td>
+              <td>{{ log.duration }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <!-- Device Details -->
-  <div class="device-details">
-    <div class="details">
-      <div class="detail-item">
-        <span class="label">Device Name:</span>
-        <span class="value">{{ device.deviceName }}</span>
-      </div>
-      <div class="detail-item">
-        <span class="label">Device Status:</span>
-        <span class="value" [class.status-on]="device.status === 'ON'" [class.status-off]="device.status === 'OFF'">
-          {{ device.status }}
-        </span>
-      </div>
-    </div>
-
-    <div class="details">
-      <div class="detail-item">
-        <span class="label">Device Location:</span>
-        <span class="value">{{ device.location }}</span>
-      </div>
-      <div class="detail-item">
-        <span class="label">Battery Status:</span>
-        <span class="value" [class.status-high]="device.battery > 50" [class.status-low]="device.battery <= 50">
-          {{ device.battery }}%
-        </span>
-      </div>
-    </div>
-
-    <div class="details">
-      <div class="detail-item">
-        <span class="label">Device Model:</span>
-        <span class="value">{{ device.model }}</span>
-      </div>
-      <div class="detail-item">
-        <span class="label">Device ID:</span>
-        <span class="value">{{ device.deviceId }}</span>
-      </div>
-    </div>
-
-    <div class="details">
-      <div class="detail-item">
-        <span class="label">Central Device Connection:</span>
-        <span class="value">{{ device.centralConnection }}</span>
-      </div>
-      <div class="detail-item">
-        <span class="label">Device Updates:</span>
-        <span class="value">{{ device.version }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Device History -->
-  <div class="device-history" *ngIf="device.history && device.history.length > 0">
-    <h1>Device History</h1>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Time Triggered</th>
-            <th>Animal Detected</th>
-            <th>Duration</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let log of device.history">
-            <td>{{ log.time }}</td>
-            <td>{{ log.animal }}</td>
-            <td>{{ log.duration }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Modal for Editing Device -->
   <app-modal [isOpen]="isModalOpen" title="Edit Device" (close)="closeModal()">
     <form class="modal-form">
-
-      <!-- Device Name -->
       <div class="form-group">
         <label>Device Name</label>
         <div class="input-group">
-          <input type="text" [(ngModel)]="editableDevice.deviceName" name="deviceName" class="input-field"
-            [readonly]="!editModes.deviceName" [class.editable]="editModes.deviceName" />
+          <input
+            type="text"
+            [(ngModel)]="editableDevice.deviceName"
+            name="deviceName"
+            class="input-field"
+            [readonly]="!editModes.deviceName"
+            [class.editable]="editModes.deviceName"
+          />
           <button type="button" class="change-btn" (click)="toggleEditMode('deviceName')">
             {{ editModes.deviceName ? 'Save' : 'Change' }}
           </button>
         </div>
       </div>
 
-      <!-- Device Owner -->
       <div class="form-group">
         <label>Device Owner</label>
         <div class="input-group">
-          <input type="text" [(ngModel)]="editableDevice.owner" name="owner" class="input-field"
-            [readonly]="!editModes.owner" [class.editable]="editModes.owner" />
+          <input
+            type="text"
+            [(ngModel)]="editableDevice.owner"
+            name="owner"
+            class="input-field"
+            [readonly]="!editModes.owner"
+            [class.editable]="editModes.owner"
+          />
           <button type="button" class="change-btn" (click)="toggleEditMode('owner')">
             {{ editModes.owner ? 'Save' : 'Change' }}
           </button>
         </div>
       </div>
 
-      <!-- Device Location -->
       <div class="form-group">
         <label>Device Location</label>
         <div class="input-group">
-          <input type="text" [(ngModel)]="editableDevice.location" name="location" class="input-field"
-            [readonly]="!editModes.location" [class.editable]="editModes.location" />
+          <input
+            type="text"
+            [(ngModel)]="editableDevice.location"
+            name="location"
+            class="input-field"
+            [readonly]="!editModes.location"
+            [class.editable]="editModes.location"
+          />
           <button type="button" class="change-btn" (click)="toggleEditMode('location')">
             {{ editModes.location ? 'Save' : 'Change' }}
           </button>
         </div>
       </div>
 
-      <!-- Device Status -->
       <div class="form-group flex-between">
         <label>Device Status</label>
         <div class="status-display">
@@ -148,22 +154,25 @@
         </div>
       </div>
 
-      <!-- Device Schedule -->
       <div class="form-group">
         <label>Device Schedule</label>
         <div class="input-group">
-          <input type="text" [(ngModel)]="editableDevice.schedule" name="schedule"
-            placeholder="Schedule Device Active Time" class="input-field" [readonly]="!editModes.schedule"
-            [class.editable]="editModes.schedule" />
+          <input
+            type="text"
+            [(ngModel)]="editableDevice.schedule"
+            name="schedule"
+            placeholder="Schedule Device Active Time"
+            class="input-field"
+            [readonly]="!editModes.schedule"
+            [class.editable]="editModes.schedule"
+          />
           <button type="button" class="change-btn" (click)="toggleEditMode('schedule')">
             {{ editModes.schedule ? 'Save' : 'Change' }}
           </button>
         </div>
       </div>
-
     </form>
 
-    <!-- Save Button Outside Form but Inside Modal -->
     <div class="form-footer">
       <button type="button" class="save-btn" (click)="saveDeviceChanges()">Save Changes</button>
     </div>

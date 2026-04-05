@@ -1,91 +1,363 @@
-<div class="user-content" *ngIf="user">
-    <div class="header-section">
-        <div class="device-header">
-            <h3>Users</h3>
-            <h1 class="green-text">{{ user.nodeName }}</h1>
-        </div>
-        <button class="edit-button" (click)="edituser (user)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path
-                    d="M21.7312 2.26884C20.706 1.24372 19.044 1.24372 18.0188 2.26884L16.8617 3.42599L20.574 7.1383L21.7312 5.98116C22.7563 4.95603 22.7563 3.29397 21.7312 2.26884Z"
-                    fill="white" />
-                <path
-                    d="M19.5133 8.19896L15.801 4.48665L7.40019 12.8875C6.78341 13.5043 6.33002 14.265 6.081 15.101L5.28122 17.7859C5.2026 18.0498 5.27494 18.3356 5.46967 18.5303C5.6644 18.725 5.95019 18.7974 6.21412 18.7188L8.89901 17.919C9.73498 17.67 10.4957 17.2166 11.1125 16.5998L19.5133 8.19896Z"
-                    fill="white" />
-                <path
-                    d="M5.25 5.24999C3.59315 5.24999 2.25 6.59314 2.25 8.24999V18.75C2.25 20.4068 3.59315 21.75 5.25 21.75H15.75C17.4069 21.75 18.75 20.4068 18.75 18.75V13.5C18.75 13.0858 18.4142 12.75 18 12.75C17.5858 12.75 17.25 13.0858 17.25 13.5V18.75C17.25 19.5784 16.5784 20.25 15.75 20.25H5.25C4.42157 20.25 3.75 19.5784 3.75 18.75V8.24999C3.75 7.42156 4.42157 6.74999 5.25 6.74999H10.5C10.9142 6.74999 11.25 6.41421 11.25 5.99999C11.25 5.58578 10.9142 5.24999 10.5 5.24999H5.25Z"
-                    fill="white" />
-            </svg>
-            Edit User
-        </button>
+@if (profile; as p) {
+  <div class="farmer-page">
+    <header class="farmer-hero">
+      <button type="button" class="farmer-back" (click)="goBack()" aria-label="Back to dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <div class="farmer-hero__text">
+        <h1 class="farmer-hero__name">{{ p.name }}</h1>
+        <p class="farmer-hero__meta">{{ p.farmName }} · {{ p.role }}</p>
+      </div>
+    </header>
+
+    <div class="farmer-tabs" role="tablist" aria-label="Member sections">
+      <button
+        type="button"
+        role="tab"
+        class="farmer-tab"
+        [class.farmer-tab--active]="activeTab === 'devices'"
+        [attr.aria-selected]="activeTab === 'devices'"
+        (click)="setTab('devices')"
+      >
+        Devices
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="farmer-tab"
+        [class.farmer-tab--active]="activeTab === 'reports'"
+        [attr.aria-selected]="activeTab === 'reports'"
+        (click)="setTab('reports')"
+      >
+        Reports
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="farmer-tab"
+        [class.farmer-tab--active]="activeTab === 'activity'"
+        [attr.aria-selected]="activeTab === 'activity'"
+        (click)="setTab('activity')"
+      >
+        Activity Logs
+      </button>
     </div>
 
-    <!-- User Details -->
-    <div class="user-details">
-        <div class="details">
-            <div class="detail-item">
-                <span class="label">User Name:</span>
-                <span class="value">{{ user.userName }}</span>
-            </div>
-            <div class="detail-item">
-                <span class="label">Email:</span>
-                <span class="value">{{ user.email}}</span>
-            </div>
+    @if (activeTab === 'devices') {
+      <section class="farmer-panel" aria-label="Devices">
+        <div class="farmer-stats">
+          <div class="farmer-stat">
+            <span class="farmer-stat__label">Total</span>
+            <span class="farmer-stat__value">{{ totalDevices }}</span>
+          </div>
+          <div class="farmer-stat">
+            <span class="farmer-stat__label">Online</span>
+            <span class="farmer-stat__value farmer-stat__value--ok">{{ onlineCount }}</span>
+          </div>
+          <div class="farmer-stat">
+            <span class="farmer-stat__label">Offline</span>
+            <span class="farmer-stat__value farmer-stat__value--bad">{{ offlineCount }}</span>
+          </div>
         </div>
-        <div class="details">
-            <div class="detail-item">
-                <span class="label">Phone Number :</span>
-                <span class="value">{{ user.phoneNumber }}</span>
-            </div>
-            <div class="detail-item">
-                <span class="label">Address:</span>
-                <span class="value">{{ user.address }}</span>
-            </div>
-        </div>
-    </div>
 
-    <!-- User Devices  -->
-    <div class="user-devices" *ngIf="user.devices && user.devices.length > 0">
-        <h1>User Devices </h1>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Device Name</th>
-                        <th>Status</th>
-                        <th>Last Time Activated</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let device of user.devices">
-                        <td>{{ device.deviceName }}</td>
-                        <td>{{ device.deviceStatus }}</td>
-                        <td>{{ device.lastTimeActivated }}</td>
-                        <td>
-                            <button class="edit-btn" (click)="editDevice(device)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none">
-                                    <path
-                                        d="M20.2312 1.26884C19.206 0.243718 17.544 0.243718 16.5188 1.26884L15.3617 2.42599L19.074 6.1383L20.2312 4.98116C21.2563 3.95603 21.2563 2.29397 20.2312 1.26884Z"
-                                        fill="#37612F" />
-                                    <path
-                                        d="M18.0133 7.19896L14.301 3.48665L5.90019 11.8875C5.28341 12.5043 4.83002 13.265 4.581 14.101L3.78122 16.7859C3.7026 17.0498 3.77494 17.3356 3.96967 17.5303C4.1644 17.725 4.45019 17.7974 4.71412 17.7188L7.39901 16.919C8.23498 16.67 8.99573 16.2166 9.61252 15.5998L18.0133 7.19896Z"
-                                        fill="#37612F" />
-                                    <path
-                                        d="M3.75 4.24999C2.09315 4.24999 0.75 5.59314 0.75 7.24999V17.75C0.75 19.4068 2.09315 20.75 3.75 20.75H14.25C15.9069 20.75 17.25 19.4068 17.25 17.75V12.5C17.25 12.0858 16.9142 11.75 16.5 11.75C16.0858 11.75 15.75 12.0858 15.75 12.5V17.75C15.75 18.5784 15.0784 19.25 14.25 19.25H3.75C2.92157 19.25 2.25 18.5784 2.25 17.75V7.24999C2.25 6.42156 2.92157 5.74999 3.75 5.74999H9C9.41421 5.74999 9.75 5.41421 9.75 4.99999C9.75 4.58578 9.41421 4.24999 9 4.24999H3.75Z"
-                                        fill="#37612F" />
-                                </svg></button>
-                            <button class="delete-btn" (click)="deleteDevice(device)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24"
-                                    fill="none">
-                                    <path fill-rule="evenodd" clip-rule="evenodd"
-                                        d="M17.0001 4.47819V4.70498C17.9548 4.79237 18.9017 4.90731 19.8398 5.04898C20.1871 5.10143 20.5332 5.15755 20.8781 5.2173C21.2863 5.28799 21.5598 5.67617 21.4891 6.0843C21.4184 6.49244 21.0302 6.76598 20.6221 6.69529C20.5525 6.68323 20.4829 6.67132 20.4131 6.65957L19.4077 19.7301C19.2875 21.2931 17.9842 22.5 16.4166 22.5H8.58369C7.01608 22.5 5.71276 21.2931 5.59253 19.7301L4.5871 6.65957C4.5174 6.67132 4.44774 6.68323 4.37813 6.69529C3.97 6.76598 3.58183 6.49244 3.51113 6.0843C3.44043 5.67617 3.71398 5.28799 4.12211 5.2173C4.46701 5.15755 4.81315 5.10143 5.16048 5.04898C6.09858 4.90731 7.0454 4.79237 8.00012 4.70498V4.47819C8.00012 2.91371 9.21265 1.57818 10.8156 1.52691C11.3749 1.50901 11.9365 1.5 12.5001 1.5C13.0638 1.5 13.6253 1.50901 14.1847 1.52691C15.7876 1.57818 17.0001 2.91371 17.0001 4.47819ZM10.8635 3.02614C11.4069 3.00876 11.9525 3 12.5001 3C13.0478 3 13.5934 3.00876 14.1367 3.02614C14.8913 3.05028 15.5001 3.68393 15.5001 4.47819V4.59082C14.5078 4.53056 13.5075 4.5 12.5001 4.5C11.4928 4.5 10.4925 4.53056 9.50012 4.59082V4.47819C9.50012 3.68393 10.1089 3.05028 10.8635 3.02614ZM10.5087 8.97118C10.4928 8.55727 10.1444 8.23463 9.73045 8.25055C9.31654 8.26647 8.99391 8.61492 9.00983 9.02882L9.35599 18.0288C9.3719 18.4427 9.72035 18.7654 10.1343 18.7494C10.5482 18.7335 10.8708 18.3851 10.8549 17.9712L10.5087 8.97118ZM15.9895 9.02882C16.0054 8.61492 15.6828 8.26647 15.2689 8.25055C14.855 8.23463 14.5065 8.55727 14.4906 8.97118L14.1444 17.9712C14.1285 18.3851 14.4512 18.7335 14.8651 18.7494C15.279 18.7654 15.6274 18.4427 15.6433 18.0288L15.9895 9.02882Z"
-                                        fill="#B81010" />
-                                </svg></button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <h2 class="farmer-section-title">My devices ({{ totalDevices }})</h2>
+
+        @if (p.devices.length === 0) {
+          <p class="farmer-empty">No devices registered for this member yet.</p>
+        } @else {
+          <ul class="farmer-device-list" role="list">
+            @for (d of p.devices; track d.id) {
+              <li>
+                <article class="device-card device-card--tappable" (click)="openLinkedNodes(d)">
+                  <div class="device-card__top">
+                    <div class="device-card__status">
+                      <span class="device-card__dot" [class.device-card__dot--off]="!d.online" aria-hidden="true"></span>
+                      <span>{{ d.status }}</span>
+                    </div>
+                    <span class="device-card__battery" aria-hidden="true" title="Battery OK">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <rect x="2" y="7" width="18" height="10" rx="2" />
+                        <path d="M22 11v2" stroke-linecap="round" />
+                        <path d="M6 11h8" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                  </div>
+                  <p class="device-card__hub">{{ d.centralName }}</p>
+                  <div class="device-card__rows">
+                    <div class="device-card__row">
+                      <span class="device-card__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                          <path d="M5 12.55a11 11 0 0 1 14.08 0" stroke-linecap="round" />
+                          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" stroke-linecap="round" />
+                          <path d="M12 20h.01" stroke-linecap="round" />
+                        </svg>
+                      </span>
+                      <span class="device-card__row-text">{{ d.frequencyHz }} Hz</span>
+                    </div>
+                    <div class="device-card__row">
+                      <span class="device-card__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                          <circle cx="12" cy="12" r="9" />
+                          <path d="M12 7v5l3 2" stroke-linecap="round" />
+                        </svg>
+                      </span>
+                      <span class="device-card__row-text">Last time triggered: {{ d.lastTriggered }}</span>
+                    </div>
+                    <div class="device-card__row">
+                      <span class="device-card__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                          <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z" stroke-linecap="round" />
+                          <circle cx="12" cy="10" r="2.5" />
+                        </svg>
+                      </span>
+                      <span class="device-card__row-text">{{ d.location }}</span>
+                    </div>
+                  </div>
+                  <div class="device-card__actions" (click)="$event.stopPropagation()">
+                    <button type="button" class="device-card__btn device-card__btn--edit" (click)="editDevice(d, $event)" aria-label="Edit device">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                    <button type="button" class="device-card__btn device-card__btn--delete" (click)="deleteDevice(d, $event)" aria-label="Delete device">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" stroke-linecap="round" />
+                        <path d="M10 11v6M14 11v6" stroke-linecap="round" />
+                      </svg>
+                    </button>
+                  </div>
+                </article>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+
+    @if (activeTab === 'reports') {
+      <section class="farmer-panel farmer-reports" aria-label="Reports">
+        <div class="fr-filters">
+          <div class="fr-filters__head">
+            <label class="fr-label" for="fr-device-select">Filter devices</label>
+            <span class="fr-hint">Narrow charts by device</span>
+          </div>
+          <div class="fr-select-wrap">
+            <select
+              id="fr-device-select"
+              class="fr-select"
+              name="reportDeviceSelect"
+              [(ngModel)]="reportDeviceSelect"
+              (change)="onReportDeviceSelectChange()"
+            >
+              @if (p.devices.length === 0) {
+                <option value="">No devices</option>
+              }
+              @for (d of p.devices; track d.id) {
+                <option [value]="d.id">{{ d.centralName }}</option>
+              }
+            </select>
+          </div>
+          @if (selectedReportDevices.length) {
+            <div class="fr-chips" aria-label="Selected devices">
+              @for (name of selectedReportDevices; track name) {
+                <span class="fr-chip">
+                  <span class="fr-chip__text">{{ name }}</span>
+                  <button
+                    type="button"
+                    class="fr-chip__x"
+                    (click)="removeReportDeviceChip(name)"
+                    [attr.aria-label]="'Remove ' + name"
+                  >
+                    ×
+                  </button>
+                </span>
+              }
+            </div>
+          }
         </div>
-    </div>
+
+        <div class="fr-stats" role="group" aria-label="Report status overview">
+          <div class="fr-stat">
+            <span class="fr-stat__dot fr-stat__dot--ok" aria-hidden="true"></span>
+            <span class="fr-stat__label">Active</span>
+            <span class="fr-stat__val fr-stat__val--ok">{{ reportStats.active }}</span>
+          </div>
+          <div class="fr-stat">
+            <span class="fr-stat__dot fr-stat__dot--err" aria-hidden="true"></span>
+            <span class="fr-stat__label">Error</span>
+            <span class="fr-stat__val fr-stat__val--err">{{ reportStats.error }}</span>
+          </div>
+          <div class="fr-stat">
+            <span class="fr-stat__dot fr-stat__dot--muted" aria-hidden="true"></span>
+            <span class="fr-stat__label">Inactive</span>
+            <span class="fr-stat__val fr-stat__val--muted">{{ reportStats.inactive }}</span>
+          </div>
+        </div>
+
+        <div class="fr-period">
+          <h3 class="fr-subtitle">Reporting period</h3>
+          <p class="fr-lead">Choose a month range to compare trends.</p>
+          <div class="fr-month-row">
+            <label class="fr-month">
+              <span class="fr-month__label">From month</span>
+              <span class="fr-month__field">
+                <svg class="fr-month__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" />
+                </svg>
+                <input class="fr-month__input" type="month" [(ngModel)]="reportFromMonth" name="reportFrom" />
+              </span>
+            </label>
+            <label class="fr-month">
+              <span class="fr-month__label">To month</span>
+              <span class="fr-month__field">
+                <svg class="fr-month__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" />
+                </svg>
+                <input class="fr-month__input" type="month" [(ngModel)]="reportToMonth" name="reportTo" />
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="fr-chart-card">
+          <div class="fr-chart-head">
+            <div>
+              <h3 class="fr-subtitle fr-subtitle--tight">Device Summary Analysis</h3>
+              <p class="fr-lead fr-lead--tight">{{ reportPeriodSummary }}</p>
+            </div>
+            <button
+              type="button"
+              class="fr-pill"
+              [class.fr-pill--active]="reportGranularity === 'monthly'"
+              (click)="setReportGranularity('monthly')"
+            >
+              Monthly
+            </button>
+          </div>
+          <div class="fr-chart-canvas">
+            <app-farmer-report-chart
+              [labels]="reportChartLabels"
+              [values]="reportChartValues"
+              [datasetLabel]="selectedReportDevices[0] || 'Central Hub Alpha'"
+            />
+          </div>
+        </div>
+
+        <div class="fr-bottom">
+          <div class="fr-top-devices">
+            <h3 class="fr-subtitle">Top detected devices</h3>
+            <ul class="fr-device-list" role="list">
+              @for (n of reportTopDevices; track n) {
+                <li class="fr-device-list__item">
+                  <span class="fr-device-list__text" [attr.title]="n">{{ n }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+          <div class="fr-totals">
+            <div class="fr-total fr-total--blue">
+              <span class="fr-total__label">Total triggered times</span>
+              <span class="fr-total__value">{{ reportTotalTriggered }}</span>
+            </div>
+            <div class="fr-total fr-total--green">
+              <span class="fr-total__label">Total active time</span>
+              <span class="fr-total__value">{{ reportTotalActiveMins }} mins</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    @if (activeTab === 'activity') {
+      <section class="farmer-panel farmer-activity" aria-label="Activity logs">
+        @for (group of activityGroups; track group.label) {
+          <h3 class="fa-group-label">{{ group.label }}</h3>
+          <ul class="fa-list" role="list">
+            @for (e of group.entries; track $index) {
+              <li>
+                <article class="fa-card">
+                  <div class="fa-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="7" y="7" width="10" height="10" rx="1.5" />
+                      <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round" />
+                    </svg>
+                  </div>
+                  <div class="fa-body">
+                    <span class="fa-name">{{ e.userName }}</span>
+                    <span class="fa-action">
+                      <span class="fa-k">Action:</span>
+                      <span class="fa-action__text">{{ e.action }}</span>
+                    </span>
+                    <span class="fa-when">
+                      <span class="fa-k">When:</span>
+                      {{ e.when }}
+                    </span>
+                  </div>
+                </article>
+              </li>
+            }
+          </ul>
+        }
+        <p class="fa-footer-link">
+          <a routerLink="/activitylogs" class="farmer-inline-link">Open full activity logs</a>
+        </p>
+      </section>
+    }
+
+    @if (linkedNodesFor; as hub) {
+      <div class="linked-nodes-backdrop" (click)="closeLinkedNodes()">
+        <div
+          class="linked-nodes"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="linked-nodes-title"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="linked-nodes__header">
+            <h2 id="linked-nodes-title" class="linked-nodes__title">Linked nodes</h2>
+            <button type="button" class="linked-nodes__close" (click)="closeLinkedNodes()" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+          <p class="linked-nodes__hub-name">{{ hub.centralName }}</p>
+          <div class="linked-nodes__rule" role="presentation"></div>
+          <p class="linked-nodes__section-label">Pairing</p>
+
+          @if (hub.linkedNodeCount === 0) {
+            <div class="linked-nodes__empty">
+              <div class="linked-nodes__empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <rect x="7" y="7" width="10" height="10" rx="1.5" />
+                  <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M12 9h-2M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round" />
+                </svg>
+              </div>
+              <p class="linked-nodes__empty-title">No node devices yet.</p>
+              <p class="linked-nodes__empty-desc">
+                This central device doesn't have any paired nodes yet. Node pairing is managed from farmer accounts.
+              </p>
+            </div>
+          } @else {
+            <p class="linked-nodes__summary">{{ hub.linkedNodeCount }} node device(s) linked to this central.</p>
+          }
+
+          <button type="button" class="linked-nodes__cta" (click)="viewAllLinkedNodes()">
+            <span class="linked-nodes__cta-side" aria-hidden="true"></span>
+            <span class="linked-nodes__cta-label">View all nodes</span>
+            <span class="linked-nodes__cta-side linked-nodes__cta-side--end" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}

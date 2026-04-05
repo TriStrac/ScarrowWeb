@@ -1,0 +1,252 @@
+<div
+  class="app-page messages-page"
+  [class.messages-page--inbox]="!conversationId"
+  [class.messages-page--thread]="!!conversationId"
+>
+  <div class="messages-shell" [class.messages-shell--thread-open]="!!conversationId">
+    <!-- Inbox column: full width on mobile; left rail on desktop -->
+    <aside class="messages-inbox-col" aria-label="Conversations">
+      <header class="messages-inbox-header">
+        <div class="messages-inbox-header__row">
+          <h1 class="messages-inbox-header__title">Messages</h1>
+          <button type="button" class="messages-inbox-compose" (click)="openCompose()" aria-label="New message" title="New message">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <path d="M22 6l-10 7L2 6" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="messages-inbox-search">
+        <label class="messages-inbox-search__label" for="messages-inbox-search-input">Search conversations</label>
+        <div class="messages-inbox-search__field">
+          <svg class="messages-inbox-search__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            id="messages-inbox-search-input"
+            type="search"
+            class="messages-inbox-search__input"
+            placeholder="Search by name or message…"
+            autocomplete="off"
+            [value]="inboxSearch"
+            (input)="inboxSearch = ($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <header class="messages-inbox-intro messages-inbox-intro--desktop">
+        <p class="messages-inbox-intro__kicker">Inbox</p>
+        <p class="messages-inbox-intro__lead">
+          Organization and system messages. Select a thread to read the full conversation.
+        </p>
+      </header>
+
+      @if (composeOpen) {
+        <div class="messages-compose-backdrop" (click)="closeCompose()">
+          <div class="messages-compose-panel" role="dialog" aria-modal="true" aria-labelledby="messages-compose-title" (click)="$event.stopPropagation()">
+            <div class="messages-compose-panel__head">
+              <h2 id="messages-compose-title" class="messages-compose-panel__title">New message</h2>
+              <button type="button" class="messages-compose-panel__close" (click)="closeCompose()" aria-label="Close">×</button>
+            </div>
+            <p class="messages-compose-panel__lead">Choose an organization member to open a thread.</p>
+            <ul class="messages-compose-list" role="list">
+              @for (m of composeableMembers(); track m.id) {
+                <li>
+                  <button type="button" class="messages-compose-row" (click)="startDmWithMember(m.id)">
+                    <span class="messages-compose-row__avatar" aria-hidden="true">{{ m.name.trim().charAt(0).toUpperCase() }}</span>
+                    <span class="messages-compose-row__main">
+                      <span class="messages-compose-row__name">{{ m.name }}</span>
+                      <span class="messages-compose-row__meta">{{ m.username }} · {{ m.roleBadge }}</span>
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+
+      <div class="messages-inbox-scroll">
+        <ul class="inbox-list" role="list">
+          @for (item of filteredInbox(); track item.id) {
+            <li>
+              <button
+                type="button"
+                class="inbox-row"
+                [class.inbox-row--active]="conversationId === item.id"
+                (click)="openThread(item.id)"
+              >
+                <span class="inbox-avatar" aria-hidden="true">{{ (item.displayName ?? item.sender).charAt(0).toUpperCase() }}</span>
+                <span class="inbox-row__main">
+                  <span class="inbox-row__top">
+                    <span class="inbox-sender">{{ item.displayName ?? item.sender }}</span>
+                    @if (item.unread) {
+                      <span class="unread-dot" aria-hidden="true"></span>
+                    }
+                  </span>
+                  <span class="inbox-preview">{{ item.preview }}</span>
+                </span>
+                <span class="inbox-time">{{ item.time }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+        @if (filteredInbox().length === 0) {
+          <p class="messages-inbox-empty">No conversations match your search.</p>
+        }
+      </div>
+    </aside>
+
+    <!-- Main: empty, or thread (+ optional contact rail) -->
+    <main
+      class="messages-main-col"
+      [class.messages-main-col--open]="!!conversationId"
+      [class.messages-main-col--contact-open]="!!conversationId && contactView"
+    >
+      @if (!conversationId) {
+        <div class="messages-empty">
+          <div class="messages-empty__card">
+            <svg class="messages-empty__icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <path d="M22 6l-10 7L2 6" />
+            </svg>
+            <h2 class="messages-empty__title">Select a conversation</h2>
+            <p class="messages-empty__text">Choose a thread from the list to view messages and reply.</p>
+          </div>
+        </div>
+      } @else {
+        <div class="messages-main-split" [class.messages-main-split--contact-open]="contactView">
+          <div class="messages-thread-pane" [class.messages-thread-pane--behind-contact-mobile]="contactView">
+            <div class="messages-thread-wrap">
+              <header class="messages-thread-header">
+                <button type="button" class="messages-icon-btn messages-thread-back--mobile" (click)="backToInbox()" aria-label="Back to inbox">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <div class="messages-thread-header__identity">
+                  <span class="messages-thread-avatar" aria-hidden="true">{{ contactInitial() }}</span>
+                  <span class="messages-thread-header__meta">
+                    <span class="messages-thread-header__name">{{ threadHeaderName() }}</span>
+                    <span class="messages-thread-header__hint">Use the info button for contact details</span>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  class="messages-contact-info-btn"
+                  [class.messages-contact-info-btn--dimmed]="!contactView"
+                  (click)="toggleContactPanel()"
+                  [attr.aria-label]="contactView ? 'Hide contact information' : 'Show contact information'"
+                  [attr.aria-pressed]="contactView"
+                >
+                  <svg class="messages-contact-info-btn__svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" fill="currentColor" stroke="rgba(255, 255, 255, 0.65)" stroke-width="1.25" />
+                    <circle cx="12" cy="8" r="1.35" fill="white" />
+                    <rect x="10.65" y="10.5" width="2.7" height="7.25" rx="0.45" fill="white" />
+                  </svg>
+                </button>
+              </header>
+
+              <div class="thread-panel">
+                <div class="thread-messages">
+                  @if (currentThread().length === 0) {
+                    <p class="thread-empty-hint">No messages yet. When messaging is connected, you can start the conversation here.</p>
+                  }
+                  @for (m of currentThread(); track m.id) {
+                    <div class="bubble-row" [class.bubble-row--self]="m.self">
+                      <div class="bubble" [class.bubble--self]="m.self">
+                        <span class="bubble-label">{{ m.self ? 'You' : 'Reply' }}</span>
+                        <p class="bubble-body">{{ m.body }}</p>
+                        <span class="bubble-time">{{ m.time }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+                <div class="composer">
+                  <p class="composer-hint composer-hint--desktop">Reply (demo — connect to API later)</p>
+                  <div class="composer-row">
+                    <input type="text" class="composer-input" placeholder="Reply…" disabled />
+                    <button type="button" class="composer-send" disabled aria-label="Send">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          @if (contactView) {
+            <aside class="messages-contact-panel" aria-label="Contact information">
+              <div class="messages-contact messages-contact--in-panel">
+                <!-- Mobile: full-width green bar -->
+                <header class="messages-contact-header messages-contact-header--mobile-stack">
+                  <button type="button" class="messages-icon-btn messages-contact-back--mobile" (click)="closeContact()" aria-label="Back to conversation">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </button>
+                  <h1 class="messages-contact-header__title messages-contact-header__title--mobile-center">Contact information</h1>
+                  <span class="messages-contact-header__spacer" aria-hidden="true"></span>
+                </header>
+
+                <!-- Desktop: slim rail header -->
+                <header class="messages-contact-header messages-contact-header--rail">
+                  <h2 class="messages-contact-rail__title">Contact</h2>
+                  <button type="button" class="messages-contact-rail__close" (click)="closeContact()" aria-label="Close contact panel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </header>
+
+                <div class="messages-contact-body">
+                  <div class="messages-contact-hero">
+                    <div class="messages-contact-avatar" aria-hidden="true">{{ contactInitial() }}</div>
+                    <h3 class="messages-contact-name">{{ contactDisplayName() }}</h3>
+                    <p class="messages-contact-subtitle">{{ contactSubtitle() }}</p>
+                  </div>
+
+                  <section class="messages-contact-card" aria-label="Contact details">
+                    <div class="messages-contact-row">
+                      <span class="messages-contact-icon-wrap" aria-hidden="true">
+                        <svg class="messages-contact-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path
+                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                          />
+                        </svg>
+                      </span>
+                      <div class="messages-contact-row__text">
+                        <span class="messages-contact-label">Phone number</span>
+                        <span class="messages-contact-value">{{ contactPhone() }}</span>
+                      </div>
+                    </div>
+                    <div class="messages-contact-divider" role="presentation"></div>
+                    <div class="messages-contact-row">
+                      <span class="messages-contact-icon-wrap" aria-hidden="true">
+                        <svg class="messages-contact-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                      </span>
+                      <div class="messages-contact-row__text">
+                        <span class="messages-contact-label">Organization</span>
+                        <span class="messages-contact-value">{{ contactOrganization() }}</span>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </aside>
+          }
+        </div>
+      }
+    </main>
+  </div>
+</div>

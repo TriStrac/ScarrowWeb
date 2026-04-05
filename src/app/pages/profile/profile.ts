@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './profile.html',
-  styleUrls: ['./profile.css']
+  styleUrls: ['./profile.css'],
 })
 export class ProfileComponent {
-  // ✅ User profile data
   user = {
     name: 'Hirono',
     email: 'hirono@email.com',
@@ -21,7 +21,20 @@ export class ProfileComponent {
     confirmPassword: '',
   };
 
-  // ✅ Toggle show/hide password
+  subscription = {
+    plan: 'Professional',
+    renews: 'April 15, 2026',
+    status: 'Active',
+  };
+
+  notifications = {
+    emailDigest: true,
+    deviceAlerts: true,
+    billing: false,
+  };
+
+  supportEmail = 'support@scarrow.app';
+
   showNewPassword = false;
   showConfirmPassword = false;
 
@@ -33,16 +46,19 @@ export class ProfileComponent {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  // ✅ Actions
   editUser() {
-    alert('Edit user clicked!');
+    alert('Edit profile (connect to API).');
   }
 
   saveChanges() {
-    alert('Changes saved successfully!');
+    alert('Changes saved (demo).');
   }
 
   changeField(field: string) {
-    alert(`Change ${field} clicked!`);
+    alert(`Change ${field} (demo).`);
+  }
+
+  contactSupport() {
+    window.location.href = `mailto:${this.supportEmail}?subject=Scarrow%20support`;
   }
 }

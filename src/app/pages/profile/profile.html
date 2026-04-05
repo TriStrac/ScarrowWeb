@@ -1,99 +1,132 @@
-<div class="profile-container">
-  <!-- Header -->
-  <div class="header-section">
-    <h3 class="section-title">My Profile</h3>
-    <h1 class="page-title">Head Farmer</h1>
-  </div>
+<div class="app-page profile-page">
+  <header class="page-header">
+    <p class="page-kicker">Profile</p>
+    <h1 class="page-title">Account &amp; settings</h1>
+    <p class="page-lead">Manage your administrator profile, subscription, notifications, and support.</p>
+  </header>
 
-  <!-- Top section: Avatar + Info -->
-  <div class="profile-header">
-    <img src="assets/peachbambi.jpg" alt="User" width="100" height="100" />
-    <div class="user-container">
-      <div class="user-info">
-        <h4>{{ user.name }}</h4>
-        <p>{{ user.email }}</p>
+  <div class="profile-grid">
+    <!-- Account -->
+    <section class="profile-section" aria-labelledby="account-heading">
+      <div class="profile-section__head">
+        <h2 id="account-heading" class="profile-section__title">Account information</h2>
+        <button type="button" class="btn-text" (click)="editUser()">Edit</button>
       </div>
-      <button class="edit-btn" (click)="editUser()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M21.7312 2.26884C20.706 1.24372 19.044 1.24372 18.0188 2.26884L16.8617 3.42599L20.574 7.1383L21.7312 5.98116C22.7563 4.95603 22.7563 3.29397 21.7312 2.26884Z" fill="white"/>
-          <path d="M19.5133 8.19896L15.801 4.48665L7.40019 12.8875C6.78341 13.5043 6.33002 14.265 6.081 15.101L5.28122 17.7859C5.2026 18.0498 5.27494 18.3356 5.46967 18.5303C5.6644 18.725 5.95019 18.7974 6.21412 18.7188L8.89901 17.919C9.73498 17.67 10.4957 17.2166 11.1125 16.5998L19.5133 8.19896Z" fill="white"/>
-          <path d="M5.25 5.24999C3.59315 5.24999 2.25 6.59314 2.25 8.24999V18.75C2.25 20.4068 3.59315 21.75 5.25 21.75H15.75C17.4069 21.75 18.75 20.4068 18.75 18.75V13.5C18.75 13.0858 18.4142 12.75 18 12.75C17.5858 12.75 17.25 13.0858 17.25 13.5V18.75C17.25 19.5784 16.5784 20.25 15.75 20.25H5.25C4.42157 20.25 3.75 19.5784 3.75 18.75V8.24999C3.75 7.42156 4.42157 6.74999 5.25 6.74999H10.5C10.9142 6.74999 11.25 6.41421 11.25 5.99999C11.25 5.58578 10.9142 5.24999 10.5 5.24999H5.25Z" fill="white"/>
-        </svg>
-        Edit User
-      </button>
+      <div class="profile-hero">
+        <div class="avatar" aria-hidden="true">H</div>
+        <div>
+          <p class="profile-name">{{ user.name }}</p>
+          <p class="profile-email">{{ user.email }}</p>
+        </div>
+      </div>
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label">Full name</span>
+          <input type="text" [(ngModel)]="user.name" />
+        </label>
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input type="email" [(ngModel)]="user.email" />
+        </label>
+        <label class="field">
+          <span class="field-label">Phone</span>
+          <input type="text" [(ngModel)]="user.phone" />
+        </label>
+        <label class="field field--full">
+          <span class="field-label">Address</span>
+          <input type="text" [(ngModel)]="user.address" />
+        </label>
+      </div>
+    </section>
+
+    <!-- Subscription -->
+    <section class="profile-section" aria-labelledby="sub-heading">
+      <h2 id="sub-heading" class="profile-section__title">Subscription</h2>
+      <div class="sub-card">
+        <div class="sub-card__row">
+          <span class="sub-label">Plan</span>
+          <span class="sub-value">{{ subscription.plan }}</span>
+        </div>
+        <div class="sub-card__row">
+          <span class="sub-label">Renews</span>
+          <span class="sub-value">{{ subscription.renews }}</span>
+        </div>
+        <div class="sub-card__row">
+          <span class="sub-label">Status</span>
+          <span class="sub-pill">{{ subscription.status }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notifications -->
+    <section class="profile-section" aria-labelledby="notif-heading">
+      <h2 id="notif-heading" class="profile-section__title">Notifications</h2>
+      <ul class="toggle-list">
+        <li class="toggle-row">
+          <div>
+            <p class="toggle-title">Email digest</p>
+            <p class="toggle-desc">Weekly summary of device activity</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="notifications.emailDigest" />
+            <span class="slider"></span>
+          </label>
+        </li>
+        <li class="toggle-row">
+          <div>
+            <p class="toggle-title">Device alerts</p>
+            <p class="toggle-desc">Push and email when a device goes offline</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="notifications.deviceAlerts" />
+            <span class="slider"></span>
+          </label>
+        </li>
+        <li class="toggle-row">
+          <div>
+            <p class="toggle-title">Billing reminders</p>
+            <p class="toggle-desc">Invoices and renewal notices</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="notifications.billing" />
+            <span class="slider"></span>
+          </label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Security -->
+    <section class="profile-section" aria-labelledby="sec-heading">
+      <h2 id="sec-heading" class="profile-section__title">Security</h2>
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label">Current password</span>
+          <input type="password" [(ngModel)]="user.currentPassword" />
+        </label>
+        <label class="field">
+          <span class="field-label">New password</span>
+          <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="user.newPassword" />
+        </label>
+        <label class="field">
+          <span class="field-label">Confirm password</span>
+          <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="user.confirmPassword" />
+        </label>
+      </div>
+    </section>
+
+    <!-- Support -->
+    <section class="profile-section profile-section--links" aria-labelledby="support-heading">
+      <h2 id="support-heading" class="profile-section__title">Support</h2>
+      <div class="link-cards">
+        <button type="button" class="link-card" (click)="contactSupport()">
+          <span class="link-card__title">Contact support</span>
+          <span class="link-card__desc">{{ supportEmail }}</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="profile-actions">
+      <button type="button" class="btn-primary" (click)="saveChanges()">Save changes</button>
     </div>
-  </div>
-
-  <div class="divider">
-  <!-- Profile form -->
-    <div class="profile-form">
-      <!-- Left column -->
-      <div class="left-col">
-        <div class = "info-container">
-          <label>Name</label>
-          <div class="input-row">
-            <input type="text" [(ngModel)]="user.name" />
-            <button (click)="changeField('Name')">Change</button>
-          </div>
-        </div>
-        <div class = "info-container">
-          <label>Phone Number</label>
-          <div class="input-row">
-            <input type="text" [(ngModel)]="user.phone" />
-            <button (click)="changeField('Phone Number')">Change</button>
-          </div>
-        </div>
-        <div class = "info-container">
-          <label>Address</label>
-          <div class="input-row">
-            <input type="text" [(ngModel)]="user.address" />
-            <button (click)="changeField('Address')">Change</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right column -->
-      <div class="right-col">
-        <div class = "info-container">
-          <label>Email</label>
-          <div class="input-row">
-            <input type="email" [(ngModel)]="user.email" />
-            <button (click)="changeField('Email')">Change</button>
-          </div>
-        </div>
-
-        <div class = "info-container">
-          <label>Current Password</label>
-          <div class="input-row">
-            <input type="password" [(ngModel)]="user.currentPassword" />
-            <button (click)="changeField('Password')">Change</button>
-          </div>
-        </div>
-
-        <div class = "info-container">
-          <label>New Password</label>
-          <div class="input-row">
-            <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="user.newPassword" />
-            <button type="button" (click)="toggleNewPassword()">
-              {{ showNewPassword ? '🙈' : '👁' }}
-            </button>
-          </div>
-        </div>
-
-        <div class = "info-container">
-          <label>Confirm Password</label>
-          <div class="input-row">
-            <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="user.confirmPassword" />
-            <button type="button" (click)="toggleConfirmPassword()">
-              {{ showConfirmPassword ? '🙈' : '👁' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-      <!-- Save button -->
-      <div class="save-btn-container">
-        <button class="save-btn" (click)="saveChanges()">Save Changes</button>
-      </div>
   </div>
 </div>
