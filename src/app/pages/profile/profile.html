@@ -1,132 +1,758 @@
-<div class="app-page profile-page">
-  <header class="page-header">
-    <p class="page-kicker">Profile</p>
-    <h1 class="page-title">Account &amp; settings</h1>
-    <p class="page-lead">Manage your administrator profile, subscription, notifications, and support.</p>
-  </header>
-
-  <div class="profile-grid">
-    <!-- Account -->
-    <section class="profile-section" aria-labelledby="account-heading">
-      <div class="profile-section__head">
-        <h2 id="account-heading" class="profile-section__title">Account information</h2>
-        <button type="button" class="btn-text" (click)="editUser()">Edit</button>
-      </div>
-      <div class="profile-hero">
-        <div class="avatar" aria-hidden="true">H</div>
-        <div>
-          <p class="profile-name">{{ user.name }}</p>
-          <p class="profile-email">{{ user.email }}</p>
-        </div>
-      </div>
-      <div class="field-grid">
-        <label class="field">
-          <span class="field-label">Full name</span>
-          <input type="text" [(ngModel)]="user.name" />
-        </label>
-        <label class="field">
-          <span class="field-label">Email</span>
-          <input type="email" [(ngModel)]="user.email" />
-        </label>
-        <label class="field">
-          <span class="field-label">Phone</span>
-          <input type="text" [(ngModel)]="user.phone" />
-        </label>
-        <label class="field field--full">
-          <span class="field-label">Address</span>
-          <input type="text" [(ngModel)]="user.address" />
-        </label>
-      </div>
-    </section>
-
-    <!-- Subscription -->
-    <section class="profile-section" aria-labelledby="sub-heading">
-      <h2 id="sub-heading" class="profile-section__title">Subscription</h2>
-      <div class="sub-card">
-        <div class="sub-card__row">
-          <span class="sub-label">Plan</span>
-          <span class="sub-value">{{ subscription.plan }}</span>
-        </div>
-        <div class="sub-card__row">
-          <span class="sub-label">Renews</span>
-          <span class="sub-value">{{ subscription.renews }}</span>
-        </div>
-        <div class="sub-card__row">
-          <span class="sub-label">Status</span>
-          <span class="sub-pill">{{ subscription.status }}</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Notifications -->
-    <section class="profile-section" aria-labelledby="notif-heading">
-      <h2 id="notif-heading" class="profile-section__title">Notifications</h2>
-      <ul class="toggle-list">
-        <li class="toggle-row">
-          <div>
-            <p class="toggle-title">Email digest</p>
-            <p class="toggle-desc">Weekly summary of device activity</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox" [(ngModel)]="notifications.emailDigest" />
-            <span class="slider"></span>
-          </label>
-        </li>
-        <li class="toggle-row">
-          <div>
-            <p class="toggle-title">Device alerts</p>
-            <p class="toggle-desc">Push and email when a device goes offline</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox" [(ngModel)]="notifications.deviceAlerts" />
-            <span class="slider"></span>
-          </label>
-        </li>
-        <li class="toggle-row">
-          <div>
-            <p class="toggle-title">Billing reminders</p>
-            <p class="toggle-desc">Invoices and renewal notices</p>
-          </div>
-          <label class="switch">
-            <input type="checkbox" [(ngModel)]="notifications.billing" />
-            <span class="slider"></span>
-          </label>
-        </li>
-      </ul>
-    </section>
-
-    <!-- Security -->
-    <section class="profile-section" aria-labelledby="sec-heading">
-      <h2 id="sec-heading" class="profile-section__title">Security</h2>
-      <div class="field-grid">
-        <label class="field">
-          <span class="field-label">Current password</span>
-          <input type="password" [(ngModel)]="user.currentPassword" />
-        </label>
-        <label class="field">
-          <span class="field-label">New password</span>
-          <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="user.newPassword" />
-        </label>
-        <label class="field">
-          <span class="field-label">Confirm password</span>
-          <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="user.confirmPassword" />
-        </label>
-      </div>
-    </section>
-
-    <!-- Support -->
-    <section class="profile-section profile-section--links" aria-labelledby="support-heading">
-      <h2 id="support-heading" class="profile-section__title">Support</h2>
-      <div class="link-cards">
-        <button type="button" class="link-card" (click)="contactSupport()">
-          <span class="link-card__title">Contact support</span>
-          <span class="link-card__desc">{{ supportEmail }}</span>
+<div
+  class="app-page profile-page"
+  [class.profile-page--compact]="layout === 'compact'"
+  [class.profile-page--wide]="layout === 'wide'"
+  [class.profile-page--account-modal-open]="
+    accountEditModal !== null || deleteAccountModalOpen || subscriptionsFeaturesModal !== null
+  "
+>
+  @if (layout === 'compact') {
+    <header class="profile-page__bar" role="banner">
+      <div class="profile-page__bar-row">
+        <h1 class="profile-page__bar-title">Profile</h1>
+        <button
+          type="button"
+          class="profile-page__bar-action"
+          (click)="scrollToAccountSection()"
+          aria-label="Account information"
+          title="Account information"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
         </button>
       </div>
-    </section>
+    </header>
+    <div class="profile-page__inner">
+      <ng-container *ngTemplateOutlet="heroTpl" />
 
-    <div class="profile-actions">
-      <button type="button" class="btn-primary" (click)="saveChanges()">Save changes</button>
+      <div class="profile-accordions">
+        <details class="profile-disclosure" id="profile-account-section">
+          <summary class="profile-disclosure__summary">
+            <span class="profile-disclosure__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                />
+              </svg>
+            </span>
+            <span class="profile-disclosure__label">Account information</span>
+            <span class="profile-disclosure__chev" aria-hidden="true"></span>
+          </summary>
+          <div class="profile-disclosure__body">
+            <ng-container *ngTemplateOutlet="accountTpl" />
+          </div>
+        </details>
+
+        <details class="profile-disclosure">
+          <summary class="profile-disclosure__summary">
+            <span class="profile-disclosure__icon profile-disclosure__icon--emoji" aria-hidden="true">👑</span>
+            <span class="profile-disclosure__label">Subscriptions</span>
+            <span class="profile-disclosure__chev" aria-hidden="true"></span>
+          </summary>
+          <div class="profile-disclosure__body profile-disclosure__body--subs">
+            <ng-container *ngTemplateOutlet="subscriptionsTpl" />
+          </div>
+        </details>
+
+        <details class="profile-disclosure">
+          <summary class="profile-disclosure__summary">
+            <span class="profile-disclosure__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+                />
+              </svg>
+            </span>
+            <span class="profile-disclosure__label">Notifications</span>
+            <span class="profile-disclosure__chev" aria-hidden="true"></span>
+          </summary>
+          <div class="profile-disclosure__body">
+            <ng-container *ngTemplateOutlet="notificationsTpl" />
+          </div>
+        </details>
+
+        <details class="profile-disclosure">
+          <summary class="profile-disclosure__summary">
+            <span class="profile-disclosure__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+                />
+              </svg>
+            </span>
+            <span class="profile-disclosure__label">Contact support</span>
+            <span class="profile-disclosure__chev" aria-hidden="true"></span>
+          </summary>
+          <div class="profile-disclosure__body">
+            <ng-container *ngTemplateOutlet="supportTpl" />
+          </div>
+        </details>
+
+        <details class="profile-disclosure">
+          <summary class="profile-disclosure__summary">
+            <span class="profile-disclosure__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                />
+              </svg>
+            </span>
+            <span class="profile-disclosure__label">Terms and conditions</span>
+            <span class="profile-disclosure__chev" aria-hidden="true"></span>
+          </summary>
+          <div class="profile-disclosure__body">
+            <ng-container *ngTemplateOutlet="termsTpl" />
+          </div>
+        </details>
+      </div>
+    </div>
+  } @else {
+    <header class="page-header profile-wide__page-header">
+      <p class="page-kicker">Profile</p>
+      <h1 class="page-title">Account &amp; settings</h1>
+      <p class="page-lead">Manage your administrator profile, subscription, notifications, and support.</p>
+    </header>
+
+    <div class="profile-desktop">
+      <div class="profile-desktop-hero">
+        <ng-container *ngTemplateOutlet="heroTpl" />
+      </div>
+
+      <div class="profile-desktop-split">
+        <nav class="profile-desktop-nav" aria-label="Settings sections">
+          @for (item of wideMenu; track item.id) {
+            <button
+              type="button"
+              class="profile-desktop-nav__item"
+              [class.profile-desktop-nav__item--active]="wideSection === item.id"
+              [attr.aria-current]="wideSection === item.id ? 'page' : null"
+              (click)="selectWideSection(item.id)"
+            >
+              <span class="profile-desktop-nav__icon" aria-hidden="true">
+                @if (item.emoji) {
+                  <span class="profile-desktop-nav__emoji">{{ item.emoji }}</span>
+                } @else if (item.id === 'account') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    />
+                  </svg>
+                } @else if (item.id === 'notifications') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+                    />
+                  </svg>
+                } @else if (item.id === 'support') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+                    />
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                    />
+                  </svg>
+                }
+              </span>
+              <span class="profile-desktop-nav__label">{{ item.label }}</span>
+            </button>
+          }
+        </nav>
+
+        <main class="profile-desktop-main" [attr.aria-label]="sectionTitles[wideSection]">
+          <div class="profile-desktop-main__body">
+            @switch (wideSection) {
+              @case ('account') {
+                <ng-container *ngTemplateOutlet="accountTpl" />
+              }
+              @case ('subscriptions') {
+                <ng-container *ngTemplateOutlet="subscriptionsTpl" />
+              }
+              @case ('notifications') {
+                <ng-container *ngTemplateOutlet="notificationsTpl" />
+              }
+              @case ('support') {
+                <ng-container *ngTemplateOutlet="supportTpl" />
+              }
+              @case ('terms') {
+                <ng-container *ngTemplateOutlet="termsTpl" />
+              }
+            }
+          </div>
+        </main>
+      </div>
+    </div>
+  }
+
+  @if (accountEditModal !== null) {
+    <div
+      class="profile-account-modal-root"
+      role="presentation"
+      (click)="closeAccountEditModal()"
+    >
+      <div
+        class="profile-account-modal"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'profile-account-modal-title'"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="profile-account-modal__head">
+          <h2 id="profile-account-modal-title" class="profile-account-modal__title">
+            {{ accountModalTitles[accountEditModal] }}
+          </h2>
+          <button
+            type="button"
+            class="profile-account-modal__close"
+            (click)="closeAccountEditModal()"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        <div class="profile-account-modal__body">
+          @switch (accountEditModal) {
+            @case ('password') {
+              <p class="profile-account-modal__hint">Enter your current password, then choose a new one.</p>
+              <label class="profile-field">
+                <span class="profile-field__label">Current password</span>
+                <input type="password" [(ngModel)]="accountDraft.currentPassword" autocomplete="current-password" />
+              </label>
+              <label class="profile-field">
+                <span class="profile-field__label">New password</span>
+                <input type="password" [(ngModel)]="accountDraft.newPassword" autocomplete="new-password" />
+              </label>
+              <label class="profile-field">
+                <span class="profile-field__label">Confirm new password</span>
+                <input type="password" [(ngModel)]="accountDraft.confirmPassword" autocomplete="new-password" />
+              </label>
+            }
+            @case ('email') {
+              <label class="profile-field">
+                <span class="profile-field__label">Email</span>
+                <input type="email" [(ngModel)]="accountDraft.email" autocomplete="email" />
+              </label>
+            }
+            @case ('name') {
+              <p class="profile-account-modal__hint">Legal name as it should appear on your account.</p>
+              <label class="profile-field">
+                <span class="profile-field__label">First name</span>
+                <input type="text" [(ngModel)]="accountDraft.firstName" autocomplete="given-name" />
+              </label>
+              <label class="profile-field">
+                <span class="profile-field__label">Middle name</span>
+                <input type="text" [(ngModel)]="accountDraft.middleName" autocomplete="additional-name" />
+              </label>
+              <label class="profile-field">
+                <span class="profile-field__label">Last name</span>
+                <input type="text" [(ngModel)]="accountDraft.lastName" autocomplete="family-name" />
+              </label>
+            }
+            @case ('birthdate') {
+              <label class="profile-field">
+                <span class="profile-field__label">Birthdate</span>
+                <input type="date" [(ngModel)]="accountDraft.birthdate" />
+              </label>
+            }
+            @case ('phone') {
+              <label class="profile-field">
+                <span class="profile-field__label">Phone number</span>
+                <input type="tel" [(ngModel)]="accountDraft.phone" autocomplete="tel" />
+              </label>
+            }
+            @case ('address') {
+              <label class="profile-field">
+                <span class="profile-field__label">Address</span>
+                <input type="text" [(ngModel)]="accountDraft.address" autocomplete="street-address" />
+              </label>
+            }
+          }
+        </div>
+        <div class="profile-account-modal__foot">
+          <button type="button" class="profile-account-modal__btn profile-account-modal__btn--ghost" (click)="closeAccountEditModal()">
+            Cancel
+          </button>
+          <button type="button" class="profile-account-modal__btn profile-account-modal__btn--primary" (click)="saveAccountEditModal()">
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (deleteAccountModalOpen) {
+    <div
+      class="profile-delete-modal-root"
+      role="presentation"
+      (click)="closeDeleteAccountModal()"
+    >
+      <div
+        class="profile-delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-delete-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="profile-delete-modal__header">
+          <button
+            type="button"
+            class="profile-delete-modal__back"
+            (click)="closeDeleteAccountModal()"
+            aria-label="Close"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <h2 id="profile-delete-modal-title" class="profile-delete-modal__header-title">Delete Account</h2>
+          <span class="profile-delete-modal__header-spacer" aria-hidden="true"></span>
+        </div>
+        <div class="profile-delete-modal__content">
+          <div class="profile-delete-modal__card">
+            <h3 class="profile-delete-modal__card-title">Delete your account</h3>
+            <p class="profile-delete-modal__card-text">
+              This permanently deletes your account, your profile, messages, and all data associated with it. Any paired
+              devices will be unpaired from your account—they are not removed from the hardware.
+            </p>
+            <p class="profile-delete-modal__card-text profile-delete-modal__card-text--emphasis">
+              This cannot be undone. Type <span class="profile-delete-modal__mono">DELETE</span> below to confirm.
+            </p>
+            <label class="profile-delete-modal__field">
+              <span class="visually-hidden">Confirmation</span>
+              <input
+                type="text"
+                class="profile-delete-modal__input"
+                [(ngModel)]="deleteConfirmPhrase"
+                placeholder="Type DELETE to confirm"
+                autocomplete="off"
+                autocapitalize="characters"
+              />
+            </label>
+            <button type="button" class="profile-delete-modal__submit" (click)="submitDeleteAccount()">
+              Delete my account permanently
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (subscriptionsFeaturesModal !== null) {
+    <div
+      class="profile-subs-features-root"
+      role="presentation"
+      (click)="closeSubscriptionsFeaturesModal()"
+    >
+      <div
+        class="profile-subs-features-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="subs-features-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="profile-subs-features-modal__head">
+          <h2 id="subs-features-title" class="profile-subs-features-modal__title">
+            {{ subscriptionsFeaturesModal === 'basic' ? 'Basic' : 'Premium' }} plan · Features
+          </h2>
+          <button
+            type="button"
+            class="profile-subs-features-modal__close"
+            (click)="closeSubscriptionsFeaturesModal()"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        <ul class="profile-subs-features-modal__list">
+          @for (
+            line of subscriptionsFeaturesModal === 'basic' ? basicPlanFeatures : premiumPlanFeatures;
+            track line
+          ) {
+            <li class="profile-subs-features-modal__item">{{ line }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+
+  <!-- Shared section bodies (single instance per visible layout branch) -->
+  <ng-template #heroTpl>
+  <section class="profile-card" aria-label="Your profile">
+    <div class="profile-card__main">
+      <div class="profile-card__avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+          />
+        </svg>
+      </div>
+      <div class="profile-card__text">
+        <div class="profile-card__name-row">
+          <p class="profile-card__name">{{ displayFullName() }}</p>
+          <span
+            class="profile-card__plan-chip"
+            [attr.aria-label]="subscriptionPlanLabel() + ' plan'"
+          >
+            @if (isPremium) {
+              <span class="profile-card__plan-chip__crown" aria-hidden="true">👑</span>
+            }
+            <span class="profile-card__plan-chip__text">{{ subscriptionPlanLabel() }}</span>
+          </span>
+        </div>
+        <p class="profile-card__username">&#64;{{ user.username }}</p>
+        <p class="profile-card__role">{{ role }}</p>
+        <p class="profile-card__farm">{{ farmName }}</p>
+      </div>
+    </div>
+  </section>
+</ng-template>
+
+<ng-template #accountTpl>
+  <div class="profile-panel profile-panel--account">
+    <div class="profile-settings-intro">
+      <div class="profile-settings-intro__avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+          />
+        </svg>
+      </div>
+      <h2 class="profile-settings-intro__title">Profile settings</h2>
+      <p class="profile-settings-intro__desc">
+        Tap a row to edit where shown. Username is read-only; legal name is edited separately.
+      </p>
+      <p class="profile-settings-intro__name">{{ displayFullName() }}</p>
+      <p class="profile-settings-intro__username">&#64;{{ user.username }}</p>
+    </div>
+
+    <p class="profile-section-label">Sign-in &amp; security</p>
+    <button type="button" class="profile-account-row" (click)="openAccountEditModal('password')">
+      <span class="profile-account-row__hint">Password</span>
+      <span class="profile-account-row__value">{{ passwordMaskDisplay }}</span>
+      <span class="profile-account-row__chev" aria-hidden="true"></span>
+    </button>
+    <div class="profile-account-row profile-account-row--static">
+      <span class="profile-account-row__hint">Username</span>
+      <span class="profile-account-row__value">&#64;{{ user.username }}</span>
+    </div>
+    <button type="button" class="profile-account-row" (click)="openAccountEditModal('email')">
+      <span class="profile-account-row__hint">Email</span>
+      <span class="profile-account-row__value">{{ user.email }}</span>
+      <span class="profile-account-row__chev" aria-hidden="true"></span>
+    </button>
+
+    <p class="profile-section-label">Profile</p>
+    <button type="button" class="profile-account-row" (click)="openAccountEditModal('name')">
+      <span class="profile-account-row__hint">Legal name</span>
+      <span class="profile-account-row__value">{{ displayFullName() }}</span>
+      <span class="profile-account-row__chev" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="profile-account-row" (click)="openAccountEditModal('birthdate')">
+      <span class="profile-account-row__hint">Birthdate</span>
+      <span class="profile-account-row__value">{{ user.birthdate || 'Not set' }}</span>
+      <span class="profile-account-row__chev" aria-hidden="true"></span>
+    </button>
+
+    <p class="profile-section-label">Contact</p>
+    <button type="button" class="profile-account-row" (click)="openAccountEditModal('phone')">
+      <span class="profile-account-row__hint">Phone number</span>
+      <span class="profile-account-row__value">{{ user.phone }}</span>
+      <span class="profile-account-row__chev" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="profile-account-row" (click)="openAccountEditModal('address')">
+      <span class="profile-account-row__hint">Address</span>
+      <span class="profile-account-row__value">{{ user.address }}</span>
+      <span class="profile-account-row__chev" aria-hidden="true"></span>
+    </button>
+
+    <div class="profile-danger-card">
+      <h3 class="profile-danger-card__title">Delete account</h3>
+      <p class="profile-danger-card__desc">Remove your data and unpair devices</p>
+      <button type="button" class="profile-danger-card__btn" (click)="openDeleteAccountModal()">Delete account</button>
     </div>
   </div>
+</ng-template>
+
+<ng-template #subscriptionsTpl>
+  <div class="profile-subs">
+    <header class="profile-subs__intro">
+      <h2 class="profile-subs__title">Plans &amp; pricing</h2>
+      <p class="profile-subs__lead">
+        Unlock more for your farm. Pick a plan now — secure checkout is almost here.
+      </p>
+      <div class="profile-subs__notice" role="status">
+        <span class="profile-subs__notice-icon" aria-hidden="true">💳</span>
+        <p>
+          Payments are rolling out soon. You can choose a plan today; we'll let you know when billing is live.
+        </p>
+      </div>
+    </header>
+
+    <section class="profile-subs__compare" aria-labelledby="subs-compare-heading">
+      <h2 id="subs-compare-heading" class="profile-subs__compare-title">Compare plans</h2>
+      <p class="profile-subs__compare-lead">
+        Select the plan that fits your farm. Use <span class="profile-subs__compare-em">View features</span> for the full
+        list in a dialog.
+      </p>
+
+      <div class="profile-subs__grid" role="radiogroup" aria-label="Choose subscription plan">
+        <div
+          class="profile-subs-card"
+          [class.profile-subs-card--selected]="selectedPlan === 'basic'"
+          role="radio"
+          tabindex="0"
+          [attr.aria-checked]="selectedPlan === 'basic'"
+          (click)="selectPlan('basic')"
+          (keydown.enter)="selectPlan('basic')"
+          (keydown.space)="$event.preventDefault(); selectPlan('basic')"
+        >
+          <div class="profile-subs-card__top">
+            <span class="profile-subs-card__badge">Basic</span>
+            <span
+              class="profile-subs-card__radio"
+              [class.profile-subs-card__radio--on]="selectedPlan === 'basic'"
+              aria-hidden="true"
+            ></span>
+          </div>
+          <p class="profile-subs-card__price">Free</p>
+          <p class="profile-subs-card__desc">Ideal for solo users and small setups.</p>
+          <button
+            type="button"
+            class="profile-subs-card__features-btn"
+            (click)="openSubscriptionsFeaturesModal('basic', $event)"
+          >
+            View features
+          </button>
+        </div>
+
+        <div
+          class="profile-subs-card profile-subs-card--premium"
+          [class.profile-subs-card--selected]="selectedPlan === 'premium'"
+          role="radio"
+          tabindex="0"
+          [attr.aria-checked]="selectedPlan === 'premium'"
+          (click)="selectPlan('premium')"
+          (keydown.enter)="selectPlan('premium')"
+          (keydown.space)="$event.preventDefault(); selectPlan('premium')"
+        >
+          <div class="profile-subs-card__top profile-subs-card__top--premium">
+            <span class="profile-subs-card__badge">Premium</span>
+            <div class="profile-subs-card__top-end">
+              <span class="profile-subs-card__reco">
+                <span class="profile-subs-card__reco-crown" aria-hidden="true">👑</span>
+                Recommended
+              </span>
+              <span
+                class="profile-subs-card__radio"
+                [class.profile-subs-card__radio--on]="selectedPlan === 'premium'"
+                aria-hidden="true"
+              ></span>
+            </div>
+          </div>
+          <p class="profile-subs-card__price">PHP 199 / month</p>
+          <p class="profile-subs-card__billing">or PHP 1,990 / year (save ~17%)</p>
+          <p class="profile-subs-card__desc">Everything in Basic, plus priority tools and support.</p>
+          <button
+            type="button"
+            class="profile-subs-card__features-btn"
+            (click)="openSubscriptionsFeaturesModal('premium', $event)"
+          >
+            View features
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="profile-subs__actions">
+      <button type="button" class="profile-subs__cta" (click)="continueSubscription()">
+        Continue with {{ selectedPlan === 'premium' ? 'Premium' : 'Basic' }}
+      </button>
+      <button type="button" class="profile-subs__secondary" (click)="restorePurchases()">Restore purchases</button>
+    </div>
+    <p class="profile-subs__legal">
+      By continuing, you agree to our Terms of Service and Privacy Policy.
+    </p>
+  </div>
+</ng-template>
+
+<ng-template #notificationsTpl>
+  <div class="profile-panel profile-panel--notifications">
+    <ul class="profile-toggle-list">
+      <li class="profile-toggle-row">
+        <div>
+          <p class="profile-toggle-row__title">Email digest</p>
+          <p class="profile-toggle-row__desc">Weekly summary of device activity</p>
+        </div>
+        <label class="profile-switch">
+          <input type="checkbox" [(ngModel)]="notifications.emailDigest" />
+          <span class="profile-switch__slider"></span>
+        </label>
+      </li>
+      <li class="profile-toggle-row">
+        <div>
+          <p class="profile-toggle-row__title">Device alerts</p>
+          <p class="profile-toggle-row__desc">When a device goes offline</p>
+        </div>
+        <label class="profile-switch">
+          <input type="checkbox" [(ngModel)]="notifications.deviceAlerts" />
+          <span class="profile-switch__slider"></span>
+        </label>
+      </li>
+      <li class="profile-toggle-row">
+        <div>
+          <p class="profile-toggle-row__title">Billing reminders</p>
+          <p class="profile-toggle-row__desc">Invoices and renewal notices</p>
+        </div>
+        <label class="profile-switch">
+          <input type="checkbox" [(ngModel)]="notifications.billing" />
+          <span class="profile-switch__slider"></span>
+        </label>
+      </li>
+    </ul>
+    <button type="button" class="profile-btn-primary profile-btn-primary--modal-foot" (click)="saveChanges()">
+      Save changes
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #supportTpl>
+  <div class="profile-panel profile-panel--support">
+    <div class="profile-help-card">
+      <span class="profile-help-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+          />
+        </svg>
+      </span>
+      <div>
+        <h2 class="profile-help-card__title">We're here to help</h2>
+        <p class="profile-help-card__text">
+          Questions about devices, your account, or your data? Open a channel below — we'll get back to you as soon as we can.
+        </p>
+        <span class="profile-help-card__pill">Typical reply within 1–2 business days</span>
+      </div>
+    </div>
+
+    <p class="profile-section-label profile-section-label--on-cream">Get in touch</p>
+    <div class="profile-channel-list">
+      <details class="profile-channel" *ngFor="let ch of supportChannels">
+        <summary class="profile-channel__summary">
+          <span class="profile-channel__icon" aria-hidden="true">
+            <svg *ngIf="ch.label === 'Email'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+              />
+            </svg>
+            <svg *ngIf="ch.label !== 'Email'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
+              />
+            </svg>
+          </span>
+          <span class="profile-channel__meta">
+            <span class="profile-channel__label">{{ ch.label }}</span>
+            <span class="profile-channel__value">{{ ch.value }}</span>
+          </span>
+          <span class="profile-channel__chev" aria-hidden="true"></span>
+        </summary>
+        <div class="profile-channel__body">
+          <p>{{ ch.more }}</p>
+          <button *ngIf="ch.label === 'Email'" type="button" class="profile-btn-text" (click)="openMail()">Open email app</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="profile-hours-card">
+      <span class="profile-hours-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </span>
+      <div>
+        <h3 class="profile-hours-card__title">Support hours</h3>
+        <p class="profile-hours-card__text">Monday–Friday · 9:00 AM – 5:00 PM (PHT)</p>
+      </div>
+    </div>
+
+    <p class="profile-footnote">For account security, we may ask you to verify your identity when you reach out.</p>
+  </div>
+</ng-template>
+
+<ng-template #termsTpl>
+  <div class="profile-panel profile-panel--terms">
+    <div class="profile-terms-intro">
+      <span class="profile-terms-intro__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+          />
+        </svg>
+      </span>
+      <div>
+        <h2 class="profile-terms-intro__title">Your agreement with Scarrow</h2>
+        <p class="profile-terms-intro__text">{{ termsIntro }}</p>
+        <span class="profile-terms-intro__pill">Effective March 31, 2026</span>
+      </div>
+    </div>
+
+    <div class="profile-terms-accordions">
+      <details class="profile-terms-item" *ngFor="let sec of termsSections">
+        <summary class="profile-terms-item__summary">
+          <span class="profile-terms-item__title">{{ sec.title }}</span>
+          <span class="profile-terms-item__chev" aria-hidden="true"></span>
+        </summary>
+        <div class="profile-terms-item__body">
+          <p>{{ sec.body }}</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="profile-terms-footer">
+      <p>
+        This summary is provided for readability. The sections above form the agreement governing use of the App.
+      </p>
+    </div>
+  </div>
+</ng-template>
+
 </div>

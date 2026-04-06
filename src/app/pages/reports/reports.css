@@ -20,6 +20,29 @@
   margin-bottom: 24px;
 }
 
+.report-scope-note {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.filter-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Filters Section */
 .filters {
   margin-bottom: 24px;
@@ -68,7 +91,7 @@
 }
 
 .filter-row input[type="date"] {
-  min-width: 140px;
+  min-width: 9.5rem;
 }
 
 /* Selected Tags */
@@ -110,50 +133,132 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Date Section */
-.date-section {
+/* Date range — modern native pickers */
+.date-range-card {
+  margin-top: 1rem;
+  padding: 1rem 1.15rem 1.1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.date-range-card__head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
-.date-label {
-  font-size: 14px;
-  color: #6b7280;
-  font-weight: 500;
-  min-width: 70px;
+.date-range-card__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #64748b;
 }
 
-.date-input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.date-input-group input[type="date"] {
+.date-range-card__clear {
   border: none;
-  background: #f9fafb;
-  padding: 6px 8px;
-  border-radius: 4px;
-  min-width: 130px;
-}
-
-.clear-date {
-  background: none;
-  border: none;
-  color: #6b7280;
+  background: transparent;
+  color: #166534;
+  font-size: 0.8125rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 14px;
-  padding: 2px;
-  border-radius: 2px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
 }
 
-.clear-date:hover {
-  color: #ef4444;
+.date-range-card__clear:hover {
+  background: #f0fdf4;
+}
+
+.date-range-card__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.65rem 1rem;
+}
+
+.date-range-card__sep {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  padding-bottom: 0.55rem;
+  user-select: none;
+}
+
+.date-range-card__hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.date-field__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.date-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.date-field__control input[type='date'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-width: 10.5rem;
+  padding: 0.55rem 2.25rem 0.55rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.date-field__control input[type='date']:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+}
+
+.date-field__control input[type='date']:focus {
+  outline: none;
+  background: #fff;
+  border-color: #166534;
+  box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.15);
+}
+
+.date-field__control input[type='date']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0.5rem;
+  cursor: pointer;
+  opacity: 0.55;
+  padding: 0.2rem;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.date-field__control input[type='date']:hover::-webkit-calendar-picker-indicator,
+.date-field__control input[type='date']:focus::-webkit-calendar-picker-indicator {
+  opacity: 1;
 }
 
 /* Main Content Layout */
@@ -174,59 +279,59 @@
 /* Pest Card */
 .pest-card {
   display: flex;
-  width: 601px;
-  height: 327px;
-  padding: 20px 10px;
+  width: 100%;
+  max-width: 601px;
+  min-height: 12rem;
+  padding: 1.15rem 1rem 1.25rem;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 20px;
+  align-items: stretch;
+  gap: 0.65rem;
   flex-shrink: 0;
-  border-radius: 4px;
-  border: 1px solid rgba(98, 125, 93, 0.25);
-  background: var(--less-beige, #FAF5EF);
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.09);
+  border-radius: 12px;
+  border: 1px solid rgba(98, 125, 93, 0.2);
+  background: #faf8f5;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.pest-card h3 {
+  color: #37612f;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0 0.35rem;
+}
+
+.pest-empty {
+  margin: 0;
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
 .pest-item {
   display: flex;
- height: 40px;
-  padding: 5px 10px;
-  justify-content: space-between;
   align-items: center;
-  align-self: stretch;
-  border-radius: 4px;
-  background: var(--less-beige, #FAF5EF);
-/* shadow1 */
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
-  border-radius: 4px;
-  border: 1px solid rgba(98, 125, 93, 0.25);
-  background: var(--less-beige, #FAF5EF);
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.09);
-  padding: 20px;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(98, 125, 93, 0.18);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.pest-card h3 {
-  color: var(--New-group-shade6, #37612F);
-  font-size: 16px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 24px; /* 150% */
-  margin: 0 0 16px 0;
+.pest-item__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #37612f;
 }
 
-.pest-item {
-  border-radius: 4px;
-  background: var(--less-beige, #FAF5EF);
-
-  /* shadow1 */
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  color: var(--Experiment-Color-2, #627D5D);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 20px; /* 166.667% */
+.pest-item__count {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #166534;
+  font-variant-numeric: tabular-nums;
 }
 
 .pest-item:last-child {
@@ -275,15 +380,37 @@
 
 .chart-box h3 {
   color: rgba(98, 125, 93, 1);
-  font-size: 18px;
-  font-weight: 500;
-  margin: 0 0 20px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
   text-align: left;
+}
+
+.chart-box__sub {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.chart-box__empty {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: #94a3b8;
 }
 
 .chart-box {
   position: relative;
-  height: 400px;
+  min-height: 400px;
+}
+
+.chart-canvas-wrap {
+  position: relative;
+  height: 350px;
+}
+
+.chart-canvas-wrap--dim {
+  opacity: 0.35;
 }
 
 #reportChart {
@@ -354,9 +481,13 @@
     height: 250px !important;
   }
 
-  .date-section {
+  .date-range-card__row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .date-range-card__sep {
+    display: none;
   }
 }
 

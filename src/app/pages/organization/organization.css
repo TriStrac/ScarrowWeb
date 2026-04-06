@@ -19,6 +19,18 @@
   min-height: min-content;
 }
 
+@media (max-width: 767px) {
+  .organization-page {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .org-layout {
+    padding-left: clamp(1rem, 3vw, 2.5rem);
+    padding-right: clamp(1rem, 3vw, 2.5rem);
+  }
+}
+
 .org-page-intro--desktop {
   display: none;
 }
@@ -88,21 +100,59 @@
   }
 }
 
-.org-header {
-  margin: 0 0 1rem;
-  padding: 1rem 1.25rem;
-  border-radius: 16px;
-  background: var(--org-green);
-  color: #fff;
-  text-align: center;
-  box-shadow: 0 6px 20px rgba(74, 122, 68, 0.28);
-}
+/* Mobile title bar — matches Messages `.messages-inbox-header` (≤767px) */
+@media (max-width: 767px) {
+  .org-header.org-header--mobile {
+    margin-top: calc(-1 * clamp(0.5rem, 2vw, 1rem));
+    margin-bottom: 0.65rem;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 1rem clamp(1rem, 3vw, 2.5rem) 1.25rem;
+    background: #4e8142;
+    border-radius: 0 0 1rem 1rem;
+    color: #fff;
+    text-align: center;
+    box-shadow: none;
+  }
 
-.org-header__title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  .org-header__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .org-header__title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.02em;
+  }
+
+  .org-header__action {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.15);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+  }
+
+  .org-header__action:hover {
+    background: rgba(0, 0, 0, 0.22);
+  }
 }
 
 .org-info-card {

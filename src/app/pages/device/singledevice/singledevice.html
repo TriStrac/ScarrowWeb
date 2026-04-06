@@ -67,8 +67,70 @@
       </dl>
     </section>
 
-    <section class="sd-card" *ngIf="device.history && device.history.length > 0" aria-labelledby="sd-history-heading">
+    <section
+      class="sd-card"
+      *ngIf="device.historyKind === 'central' && device.centralHistory?.length"
+      aria-labelledby="sd-history-heading"
+    >
       <h2 id="sd-history-heading" class="sd-card__title">Device history</h2>
+      <p class="sd-history-note">Communication and coordination with registered node devices.</p>
+      <div class="sd-table-wrap">
+        <table class="sd-table">
+          <thead>
+            <tr>
+              <th scope="col">Time triggered</th>
+              <th scope="col">Event</th>
+              <th scope="col">Node device</th>
+              <th scope="col">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of device.centralHistory">
+              <td>{{ log.timeTriggered }}</td>
+              <td>{{ log.event }}</td>
+              <td>{{ log.nodeDevice }}</td>
+              <td>{{ log.detail }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section
+      class="sd-card"
+      *ngIf="device.historyKind === 'node' && device.nodeHistory?.length"
+      aria-labelledby="sd-history-node-heading"
+    >
+      <h2 id="sd-history-node-heading" class="sd-card__title">Device history</h2>
+      <p class="sd-history-note">Pest deterrence events (for reports).</p>
+      <div class="sd-table-wrap">
+        <table class="sd-table">
+          <thead>
+            <tr>
+              <th scope="col">Time triggered</th>
+              <th scope="col">Pest detected</th>
+              <th scope="col">Frequency (Hz)</th>
+              <th scope="col">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of device.nodeHistory">
+              <td>{{ log.timeTriggered }}</td>
+              <td>{{ log.pestClass }}</td>
+              <td>{{ log.frequencyHz | number }}</td>
+              <td>{{ log.durationDisplay }} ({{ log.durationSeconds }} s)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section
+      class="sd-card"
+      *ngIf="device.historyKind === 'legacy' && device.history && device.history.length > 0"
+      aria-labelledby="sd-history-legacy-heading"
+    >
+      <h2 id="sd-history-legacy-heading" class="sd-card__title">Device history</h2>
       <div class="sd-table-wrap">
         <table class="sd-table">
           <thead>

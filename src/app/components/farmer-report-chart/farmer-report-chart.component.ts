@@ -1,11 +1,13 @@
 import {
-  afterNextRender,
+  AfterViewInit,
   Component,
   ElementRef,
   inject,
   Input,
+  OnChanges,
   OnDestroy,
   PLATFORM_ID,
+  SimpleChanges,
   ViewChild,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -30,29 +32,42 @@ Chart.register(...registerables);
     }
   `,
 })
-export class FarmerReportChartComponent implements OnDestroy {
+export class FarmerReportChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('chartCanvas') private canvasRef!: ElementRef<HTMLCanvasElement>;
 
   @Input({ required: true }) labels!: string[];
   @Input({ required: true }) values!: number[];
   @Input() datasetLabel = 'Device';
-  @Input() yAxisLabel = 'Triggered Events';
+  @Input() yAxisLabel = 'Triggered events';
+  @Input() xAxisTitle = 'Months';
 
   private readonly platformId = inject(PLATFORM_ID);
   private chart: Chart | null = null;
 
-  constructor() {
-    afterNextRender(() => {
-      if (!isPlatformBrowser(this.platformId)) return;
-      this.buildChart();
-    });
+  ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.rebuildChart();
   }
 
-  private buildChart(): void {
+  ngOnChanges(_changes: SimpleChanges): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (!this.canvasRef?.nativeElement) return;
+    queueMicrotask(() => this.rebuildChart());
+  }
+
+  private rebuildChart(): void {
     const el = this.canvasRef?.nativeElement;
     if (!el) return;
     const ctx = el.getContext('2d');
     if (!ctx) return;
+
+    this.chart?.destroy();
+    this.chart = null;
+
+    const labels = this.labels ?? [];
+    const values = this.values ?? [];
+    const maxV = Math.max(...values, 0, 1);
+    const yMax = Math.max(4, Math.ceil(maxV * 1.2));
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 280);
     gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
@@ -61,11 +76,11 @@ export class FarmerReportChartComponent implements OnDestroy {
     this.chart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: this.labels,
+        labels,
         datasets: [
           {
             label: this.datasetLabel,
-            data: this.values,
+            data: values,
             borderColor: '#2563eb',
             backgroundColor: gradient,
             borderWidth: 2,
@@ -107,16 +122,16 @@ export class FarmerReportChartComponent implements OnDestroy {
           x: {
             title: {
               display: true,
-              text: 'Months',
+              text: this.xAxisTitle,
               color: '#64748b',
               font: { size: 11, weight: 600 },
             },
             grid: { color: 'rgba(148, 163, 184, 0.25)' },
-            ticks: { color: '#64748b', font: { size: 11 } },
+            ticks: { color: '#64748b', font: { size: 11 }, maxRotation: 45, minRotation: 0 },
           },
           y: {
             min: 0,
-            max: 1500,
+            max: yMax,
             title: {
               display: true,
               text: this.yAxisLabel,
@@ -127,7 +142,7 @@ export class FarmerReportChartComponent implements OnDestroy {
             ticks: {
               color: '#64748b',
               font: { size: 11 },
-              stepSize: 300,
+              precision: 0,
             },
           },
         },

@@ -1,80 +1,136 @@
-import { Component, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import {
+  Component,
+  AfterViewInit,
+  OnInit,
+  Inject,
+  PLATFORM_ID,
+} from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Chart from 'chart.js/auto';
+import {
+  getAllReportPestEvents,
+  type ReportPestEvent,
+} from '../../data/scarrow-devices.data';
+
+function localDateKey(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+const CHART_PALETTE = ['#166534', '#0d9488', '#6366f1', '#c2410c', '#7c3aed'];
 
 @Component({
   selector: 'app-report',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './reports.html',
-  styleUrls: ['./reports.css']
+  styleUrls: ['./reports.css'],
 })
-export class ReportComponent implements AfterViewInit {
-  // Available options
-  devices: string[] = [];
+export class ReportComponent implements OnInit, AfterViewInit {
+  /** Central hubs that have paired node data. */
+  hubOptions: { id: string; name: string }[] = [];
+  selectedHubs: { id: string; name: string }[] = [];
+  tempSelectedHub = '';
+
+  /** Node device names (pests are recorded on nodes, not on the hub). */
+  nodeNames: string[] = [];
   locations: string[] = [];
 
-  // Selected arrays for tags
-  selectedDevices: string[] = [];
+  selectedNodes: string[] = [];
   selectedLocations: string[] = [];
 
-  // Temporary selections for dropdowns
-  tempSelectedDevice: string = '';
-  tempSelectedLocation: string = '';
+  tempSelectedNode = '';
+  tempSelectedLocation = '';
 
-  // Other filters
-  startDate: string = '';
-  endDate: string = '';
-  searchName: string = '';
+  startDate = '';
+  endDate = '';
+  searchName = '';
 
-  // Data properties
   mostPests: { name: string; count: number }[] = [];
-  totalTriggered: number = 0;
-  totalActive: number = 0;
+  totalTriggered = 0;
+  /** Sum of deterrence duration in minutes (from node events). */
+  totalActiveMins = 0;
 
+  filteredEvents: ReportPestEvent[] = [];
+  hasChartData = false;
+
+  private allEvents: ReportPestEvent[] = [];
   private chart: Chart | undefined;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: any) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
+
+  ngOnInit(): void {
+    this.allEvents = getAllReportPestEvents().sort(
+      (a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt),
+    );
+    const hubMap = new Map<string, string>();
+    for (const e of this.allEvents) {
+      hubMap.set(e.centralId, e.centralName);
+    }
+    this.hubOptions = [...hubMap.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    this.nodeNames = [...new Set(this.allEvents.map((e) => e.nodeName))].sort();
+    this.locations = [
+      ...new Set(this.allEvents.map((e) => e.location)),
+    ].sort();
+    this.applyFilters();
+  }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      this.loadMockData();
       this.renderChart();
     }
   }
 
-  // Device tag methods
-  addDeviceTag(event: any): void {
-    const selectedValue = event.target.value;
-    if (selectedValue && !this.selectedDevices.includes(selectedValue)) {
-      this.selectedDevices.push(selectedValue);
-      this.tempSelectedDevice = ''; // Reset dropdown
+  addHubTag(event: Event): void {
+    const id = (event.target as HTMLSelectElement).value;
+    if (!id) return;
+    const hub = this.hubOptions.find((h) => h.id === id);
+    if (!hub || this.selectedHubs.some((h) => h.id === hub.id)) return;
+    this.selectedHubs = [...this.selectedHubs, hub];
+    this.tempSelectedHub = '';
+    this.filterData();
+  }
+
+  removeHubTag(id: string): void {
+    this.selectedHubs = this.selectedHubs.filter((h) => h.id !== id);
+    this.filterData();
+  }
+
+  addNodeTag(event: Event): void {
+    const selectedValue = (event.target as HTMLSelectElement).value;
+    if (selectedValue && !this.selectedNodes.includes(selectedValue)) {
+      this.selectedNodes.push(selectedValue);
+      this.tempSelectedNode = '';
       this.filterData();
     }
   }
 
-  removeDeviceTag(device: string): void {
-    this.selectedDevices = this.selectedDevices.filter(d => d !== device);
+  removeNodeTag(node: string): void {
+    this.selectedNodes = this.selectedNodes.filter((n) => n !== node);
     this.filterData();
   }
 
-  // Location tag methods
-  addLocationTag(event: any): void {
-    const selectedValue = event.target.value;
+  addLocationTag(event: Event): void {
+    const selectedValue = (event.target as HTMLSelectElement).value;
     if (selectedValue && !this.selectedLocations.includes(selectedValue)) {
       this.selectedLocations.push(selectedValue);
-      this.tempSelectedLocation = ''; // Reset dropdown
+      this.tempSelectedLocation = '';
       this.filterData();
     }
   }
 
   removeLocationTag(location: string): void {
-    this.selectedLocations = this.selectedLocations.filter(l => l !== location);
+    this.selectedLocations = this.selectedLocations.filter((l) => l !== location);
     this.filterData();
   }
 
-  // Date clearing methods
   clearStartDate(): void {
     this.startDate = '';
     this.filterData();
@@ -85,116 +141,141 @@ export class ReportComponent implements AfterViewInit {
     this.filterData();
   }
 
-  // Filter method
-  filterData(): void {
-    console.log('Filters:', {
-      devices: this.selectedDevices,
-      locations: this.selectedLocations,
-      start: this.startDate,
-      end: this.endDate,
-      search: this.searchName
-    });
-
-    // Here you would implement your actual filtering logic
-    // For now, just logging the selected filters
+  clearDateRange(): void {
+    this.startDate = '';
+    this.endDate = '';
+    this.filterData();
   }
 
-  private loadMockData(): void {
-    // Available options
-    this.devices = ['Device 1', 'Device 2', 'Device 3', 'Device 4'];
-    this.locations = ['Location 1', 'Location 2', 'Location 3'];
+  filterData(): void {
+    this.applyFilters();
+    if (isPlatformBrowser(this.platformId)) {
+      this.renderChart();
+    }
+  }
 
-    // Mock pest data
-    this.mostPests = [
-      { name: 'Bird 1', count: 0 },
-      { name: 'Bird 4', count: 0 },
-      { name: 'Rat 1', count: 0 }
-    ];
+  private applyFilters(): void {
+    const q = this.searchName.trim().toLowerCase();
+    const allowedHubIds =
+      this.selectedHubs.length > 0 ? new Set(this.selectedHubs.map((h) => h.id)) : null;
 
-    this.totalTriggered = 90;
-    this.totalActive = 355;
+    let rows = this.allEvents.filter((e) => {
+      if (allowedHubIds && !allowedHubIds.has(e.centralId)) {
+        return false;
+      }
+      if (this.selectedNodes.length && !this.selectedNodes.includes(e.nodeName)) {
+        return false;
+      }
+      if (this.selectedLocations.length && !this.selectedLocations.includes(e.location)) {
+        return false;
+      }
+      const day = localDateKey(e.occurredAt);
+      if (!day) return false;
+      if (this.startDate && day < this.startDate) return false;
+      if (this.endDate && day > this.endDate) return false;
+      if (q) {
+        const hay =
+          `${e.nodeName} ${e.location} ${e.farmerName} ${e.centralName} ${e.centralId}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    this.filteredEvents = rows;
+
+    const pestMap = new Map<string, number>();
+    for (const e of rows) {
+      pestMap.set(e.pestClass, (pestMap.get(e.pestClass) ?? 0) + 1);
+    }
+    this.mostPests = [...pestMap.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    this.totalTriggered = rows.length;
+    this.totalActiveMins = rows.reduce((s, e) => s + e.durationSeconds / 60, 0);
   }
 
   private renderChart(): void {
-    const canvas = document.getElementById('reportChart') as HTMLCanvasElement;
+    const canvas = document.getElementById('reportChart') as HTMLCanvasElement | null;
     if (!canvas) return;
 
     if (this.chart) {
       this.chart.destroy();
+      this.chart = undefined;
     }
 
+    const byDevice = new Map<string, number>();
+    for (const e of this.filteredEvents) {
+      byDevice.set(e.nodeName, (byDevice.get(e.nodeName) ?? 0) + 1);
+    }
+
+    const labels = [...byDevice.keys()].sort();
+    const data = labels.map((k) => byDevice.get(k) ?? 0);
+    this.hasChartData = labels.length > 0 && data.some((n) => n > 0);
+
+    if (!labels.length) {
+      return;
+    }
+
+    const colors = labels.map(
+      (_, i) => CHART_PALETTE[i % CHART_PALETTE.length],
+    );
+
     this.chart = new Chart(canvas, {
-      type: 'line',
+      type: 'bar',
       data: {
-        labels: ['100 min', '200 min', '300 min'],
+        labels,
         datasets: [
           {
-            label: 'Device 1',
-            data: [30, 90, 20],
-            borderColor: '#3b82f6',
-            backgroundColor: '#3b82f6',
-            fill: false,
-            tension: 0.4,
-            pointRadius: 4,
-            pointHoverRadius: 6
+            label: 'Triggered events',
+            data,
+            backgroundColor: colors.map((c) => `${c}cc`),
+            borderColor: colors,
+            borderWidth: 1.5,
+            borderRadius: 8,
+            maxBarThickness: 48,
           },
-          {
-            label: 'Device 2',
-            data: [20, 120, 40],
-            borderColor: '#10b981',
-            backgroundColor: '#10b981',
-            fill: false,
-            tension: 0.4,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }
-        ]
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'top',
-            align: 'end',
-            labels: {
-              usePointStyle: true,
-              padding: 20,
-              font: {
-                size: 12
-              }
-            }
-          }
+            display: false,
+          },
+          tooltip: {
+            callbacks: {
+              afterLabel: (ctx) => {
+                const i = ctx.dataIndex;
+                const name = labels[i];
+                const evts = this.filteredEvents.filter((e) => e.nodeName === name);
+                if (!evts.length) return '';
+                const avgHz = Math.round(
+                  evts.reduce((s, e) => s + e.frequencyHz, 0) / evts.length,
+                );
+                return `Avg frequency: ${avgHz} Hz`;
+              },
+            },
+          },
         },
         scales: {
           x: {
-            title: {
-              display: true,
-              text: 'Total Active (mins)',
-              font: {
-                size: 12
-              }
-            },
-            grid: {
-              display: true,
-              color: '#e5e7eb'
-            }
+            grid: { display: false },
+            ticks: { font: { size: 11 }, maxRotation: 35, minRotation: 0 },
           },
           y: {
+            beginAtZero: true,
             title: {
               display: true,
-              text: 'Total Triggered Times',
-              font: {
-                size: 12
-              }
+              text: 'Triggered events',
+              font: { size: 12, weight: 500 },
             },
-            grid: {
-              display: true,
-              color: '#e5e7eb'
-            }
-          }
-        }
-      }
+            ticks: { stepSize: 1 },
+            grid: { color: '#f1f5f9' },
+          },
+        },
+      },
     });
   }
 }

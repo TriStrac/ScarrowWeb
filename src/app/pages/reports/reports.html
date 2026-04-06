@@ -1,29 +1,59 @@
 <div class="report-container">
   <h2>Reports</h2>
 
-  <!-- Filters -->
   <div class="filters">
+    <p class="report-scope-note">
+      All metrics are from <strong>node devices</strong> paired to central hubs (hubs coordinate only; pest deterrence is logged per node).
+    </p>
     <div class="filter-row">
-      <!-- Device Filter with Tags -->
       <div class="filter-group">
         <div class="filter-controls">
-          <select [(ngModel)]="tempSelectedDevice" (change)="addDeviceTag($event)">
-            <option value="">Devices</option>
-            <option *ngFor="let device of devices" [value]="device">{{ device }}</option>
+          <label class="filter-sr-only" for="report-hub-select">Central hub</label>
+          <select
+            id="report-hub-select"
+            [(ngModel)]="tempSelectedHub"
+            (change)="addHubTag($event)"
+          >
+            <option value="">Central hub</option>
+            <option *ngFor="let h of hubOptions" [value]="h.id">{{ h.name }}</option>
           </select>
         </div>
-        <div class="selected-tags" *ngIf="selectedDevices.length > 0">
-          <div class="tag" *ngFor="let device of selectedDevices">
-            {{ device }}
-            <button class="remove-tag" (click)="removeDeviceTag(device)">×</button>
+        <div class="selected-tags" *ngIf="selectedHubs.length > 0">
+          <div class="tag" *ngFor="let h of selectedHubs">
+            {{ h.name }}
+            <button type="button" class="remove-tag" (click)="removeHubTag(h.id)">×</button>
           </div>
         </div>
       </div>
 
-      <!-- Location Filter with Tags -->
       <div class="filter-group">
         <div class="filter-controls">
-          <select [(ngModel)]="tempSelectedLocation" (change)="addLocationTag($event)">
+          <label class="filter-sr-only" for="report-node-select">Node device</label>
+          <select
+            id="report-node-select"
+            [(ngModel)]="tempSelectedNode"
+            (change)="addNodeTag($event)"
+          >
+            <option value="">Node device</option>
+            <option *ngFor="let node of nodeNames" [value]="node">{{ node }}</option>
+          </select>
+        </div>
+        <div class="selected-tags" *ngIf="selectedNodes.length > 0">
+          <div class="tag" *ngFor="let node of selectedNodes">
+            {{ node }}
+            <button type="button" class="remove-tag" (click)="removeNodeTag(node)">×</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-controls">
+          <label class="filter-sr-only" for="report-loc-select">Location</label>
+          <select
+            id="report-loc-select"
+            [(ngModel)]="tempSelectedLocation"
+            (change)="addLocationTag($event)"
+          >
             <option value="">Location</option>
             <option *ngFor="let loc of locations" [value]="loc">{{ loc }}</option>
           </select>
@@ -31,62 +61,96 @@
         <div class="selected-tags" *ngIf="selectedLocations.length > 0">
           <div class="tag" *ngFor="let location of selectedLocations">
             {{ location }}
-            <button class="remove-tag" (click)="removeLocationTag(location)">×</button>
+            <button type="button" class="remove-tag" (click)="removeLocationTag(location)">×</button>
           </div>
         </div>
       </div>
 
-      <!-- Search Input -->
       <div class="search-container">
-        <input type="text" [(ngModel)]="searchName" placeholder="Search Farmer Name/Device Name" (input)="filterData()">
+        <input
+          type="search"
+          [(ngModel)]="searchName"
+          placeholder="Search farmer, hub, node, or hub id"
+          (input)="filterData()"
+          autocomplete="off"
+        />
       </div>
     </div>
 
-    <!-- Date Section -->
-    <div class="date-section">
-      <div class="date-input-group">
-        <span class="date-label">Start Date</span>
-        <input type="date" [(ngModel)]="startDate" (change)="filterData()">
-        <button class="clear-date" (click)="clearStartDate()" *ngIf="startDate">×</button>
+    <div class="date-range-card">
+      <div class="date-range-card__head">
+        <span class="date-range-card__title">Date range</span>
+        <button
+          type="button"
+          class="date-range-card__clear"
+          *ngIf="startDate || endDate"
+          (click)="clearDateRange()"
+        >
+          Clear
+        </button>
       </div>
-
-      <div class="date-input-group">
-        <span class="date-label">End Date</span>
-        <input type="date" [(ngModel)]="endDate" (change)="filterData()">
-        <button class="clear-date" (click)="clearEndDate()" *ngIf="endDate">×</button>
+      <div class="date-range-card__row">
+        <label class="date-field">
+          <span class="date-field__label">From</span>
+          <div class="date-field__control">
+            <input
+              type="date"
+              [(ngModel)]="startDate"
+              (change)="filterData()"
+              [attr.max]="endDate || null"
+            />
+          </div>
+        </label>
+        <span class="date-range-card__sep" aria-hidden="true">→</span>
+        <label class="date-field">
+          <span class="date-field__label">To</span>
+          <div class="date-field__control">
+            <input
+              type="date"
+              [(ngModel)]="endDate"
+              (change)="filterData()"
+              [attr.min]="startDate || null"
+            />
+          </div>
+        </label>
       </div>
+      <p class="date-range-card__hint">
+        Filters deterrence events from <strong>nodes linked to hubs</strong>, by local calendar day.
+      </p>
     </div>
   </div>
 
-  <!-- Main Content: Left (pests/totals) + Right (chart) -->
   <div class="report-content">
     <div class="left-section">
-      <!-- Pest Detected -->
       <div class="pest-card">
-        <h3>Most Pest Detected:</h3>
+        <h3>Pest detections (filtered)</h3>
+        <div *ngIf="mostPests.length === 0" class="pest-empty">No events match the current filters.</div>
         <div *ngFor="let pest of mostPests" class="pest-item">
-          {{ pest.name }}
+          <span class="pest-item__name">{{ pest.name }}</span>
+          <span class="pest-item__count">{{ pest.count }}</span>
         </div>
       </div>
 
-      <!-- Totals -->
       <div class="totals">
         <div class="total-box">
-          <h4>Total Triggered Times:</h4>
+          <h4>Total triggered</h4>
           <p>{{ totalTriggered }}</p>
         </div>
         <div class="total-box">
-          <h4>Total Activate Times:</h4>
-          <p>{{ totalActive }} mins</p>
+          <h4>Total active time</h4>
+          <p>{{ totalActiveMins | number : '1.0-1' }} min</p>
         </div>
       </div>
     </div>
 
     <div class="right-section">
-      <!-- Chart -->
       <div class="chart-box">
-        <h3>Device Summary Analysis</h3>
-        <canvas id="reportChart"></canvas>
+        <h3>Triggered events by node (under selected hub(s))</h3>
+        <p class="chart-box__sub" *ngIf="hasChartData">Each bar counts pest deterrence triggers from that paired node.</p>
+        <p class="chart-box__empty" *ngIf="!hasChartData">No data for this range — adjust filters or dates.</p>
+        <div class="chart-canvas-wrap" [class.chart-canvas-wrap--dim]="!hasChartData">
+          <canvas id="reportChart"></canvas>
+        </div>
       </div>
     </div>
   </div>

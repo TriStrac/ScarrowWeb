@@ -39,8 +39,30 @@
 
     <section class="ln-section" aria-labelledby="ln-nodes-label">
       <h2 id="ln-nodes-label" class="ln-label">Node devices</h2>
-      <div class="ln-card ln-card--nodes">
-        @if (c.linkedNodeCount === 0) {
+      <div class="ln-card ln-card--nodes" [class.ln-card--nodes-list]="nodes.length > 0">
+        @if (nodes.length > 0) {
+          <ul class="ln-node-list" role="list">
+            @for (n of nodes; track n.id) {
+              <li class="ln-node-list__item">
+                <a
+                  class="ln-node-list__link"
+                  [routerLink]="['/device', n.id]"
+                  [queryParams]="farmerId ? { farmer: farmerId } : {}"
+                >
+                  <span class="ln-node-list__name">{{ n.deviceName }}</span>
+                  <span class="ln-node-list__meta">{{ n.location }}</span>
+                  <span
+                    class="ln-node-list__status"
+                    [class.ln-node-list__status--on]="n.online"
+                    [class.ln-node-list__status--off]="!n.online"
+                  >
+                    {{ n.online ? 'Online' : 'Offline' }}
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        } @else if (c.linkedNodeCount === 0) {
           <div class="ln-empty">
             <div class="ln-empty__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">

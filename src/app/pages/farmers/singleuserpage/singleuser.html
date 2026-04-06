@@ -141,8 +141,10 @@
       <section class="farmer-panel farmer-reports" aria-label="Reports">
         <div class="fr-filters">
           <div class="fr-filters__head">
-            <label class="fr-label" for="fr-device-select">Filter devices</label>
-            <span class="fr-hint">Narrow charts by device</span>
+            <label class="fr-label" for="fr-device-select">Central hub</label>
+            <span class="fr-hint">
+              Charts and totals use deterrence events from <strong>node devices</strong> paired to the selected hub(s).
+            </span>
           </div>
           <div class="fr-select-wrap">
             <select
@@ -199,7 +201,7 @@
 
         <div class="fr-period">
           <h3 class="fr-subtitle">Reporting period</h3>
-          <p class="fr-lead">Choose a month range to compare trends.</p>
+          <p class="fr-lead">Choose a month range; charts use node deterrence events (birds / rodents).</p>
           <div class="fr-month-row">
             <label class="fr-month">
               <span class="fr-month__label">From month</span>
@@ -208,7 +210,14 @@
                   <rect x="3" y="4" width="18" height="18" rx="2" />
                   <path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" />
                 </svg>
-                <input class="fr-month__input" type="month" [(ngModel)]="reportFromMonth" name="reportFrom" />
+                <input
+                  class="fr-month__input"
+                  type="month"
+                  [(ngModel)]="reportFromMonth"
+                  name="reportFrom"
+                  [attr.max]="reportToMonth || null"
+                  (ngModelChange)="onReportMonthChange()"
+                />
               </span>
             </label>
             <label class="fr-month">
@@ -218,7 +227,14 @@
                   <rect x="3" y="4" width="18" height="18" rx="2" />
                   <path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" />
                 </svg>
-                <input class="fr-month__input" type="month" [(ngModel)]="reportToMonth" name="reportTo" />
+                <input
+                  class="fr-month__input"
+                  type="month"
+                  [(ngModel)]="reportToMonth"
+                  name="reportTo"
+                  [attr.min]="reportFromMonth || null"
+                  (ngModelChange)="onReportMonthChange()"
+                />
               </span>
             </label>
           </div>
@@ -230,27 +246,38 @@
               <h3 class="fr-subtitle fr-subtitle--tight">Device Summary Analysis</h3>
               <p class="fr-lead fr-lead--tight">{{ reportPeriodSummary }}</p>
             </div>
-            <button
-              type="button"
-              class="fr-pill"
-              [class.fr-pill--active]="reportGranularity === 'monthly'"
-              (click)="setReportGranularity('monthly')"
-            >
-              Monthly
-            </button>
+            <div class="fr-pill-row" role="group" aria-label="Chart granularity">
+              <button
+                type="button"
+                class="fr-pill"
+                [class.fr-pill--active]="reportGranularity === 'monthly'"
+                (click)="setReportGranularity('monthly')"
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                class="fr-pill"
+                [class.fr-pill--active]="reportGranularity === 'weekly'"
+                (click)="setReportGranularity('weekly')"
+              >
+                Weekly
+              </button>
+            </div>
           </div>
           <div class="fr-chart-canvas">
             <app-farmer-report-chart
               [labels]="reportChartLabels"
               [values]="reportChartValues"
-              [datasetLabel]="selectedReportDevices[0] || 'Central Hub Alpha'"
+              [datasetLabel]="reportChartDatasetLabel"
+              [xAxisTitle]="reportChartXTitle"
             />
           </div>
         </div>
 
         <div class="fr-bottom">
           <div class="fr-top-devices">
-            <h3 class="fr-subtitle">Top detected devices</h3>
+            <h3 class="fr-subtitle">Top nodes by triggers</h3>
             <ul class="fr-device-list" role="list">
               @for (n of reportTopDevices; track n) {
                 <li class="fr-device-list__item">
@@ -304,7 +331,12 @@
           </ul>
         }
         <p class="fa-footer-link">
-          <a routerLink="/activitylogs" class="farmer-inline-link">Open full activity logs</a>
+          <a [routerLink]="['/activitylogs', p.id]" class="fa-full-logs-cta">
+            <span>Open full activity logs</span>
+            <svg class="fa-full-logs-cta__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
         </p>
       </section>
     }

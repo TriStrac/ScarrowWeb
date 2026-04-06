@@ -194,6 +194,13 @@
   font-weight: 700;
 }
 
+.sd-history-note {
+  margin: -0.25rem 0 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
 .sd-table-wrap {
   overflow-x: auto;
   margin: 0 -0.25rem;
@@ -203,7 +210,7 @@
 
 .sd-table {
   width: 100%;
-  min-width: 480px;
+  min-width: 560px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }

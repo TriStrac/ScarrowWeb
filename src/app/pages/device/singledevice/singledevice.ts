@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ModalComponent } from '../../../components/modal/modal.component';
 import { findDeviceById } from '../../../data/farmer-profiles.data';
+import { getScarrowCentralMock, getScarrowNodeMock } from '../../../data/scarrow-devices.data';
 
 @Component({
   selector: 'app-single-device',
@@ -32,10 +33,56 @@ export class SingleDeviceComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
+    const nodeMock = getScarrowNodeMock(id);
+    if (nodeMock) {
+      const hub = getScarrowCentralMock(nodeMock.parentCentralId);
+      this.device = {
+        historyKind: 'node' as const,
+        nodeName: nodeMock.deviceName,
+        deviceName: nodeMock.deviceName,
+        status: nodeMock.online ? 'ON' : 'OFF',
+        location: nodeMock.location,
+        battery: nodeMock.batteryPercent,
+        model: nodeMock.model,
+        deviceId: nodeMock.id,
+        centralConnection: hub ? `Linked · ${hub.deviceName}` : 'Linked',
+        version: nodeMock.firmwareVersion,
+        owner: 'Hirono',
+        schedule: 'Schedule Device Active Time',
+        nodeHistory: nodeMock.history,
+      };
+      return;
+    }
+
+    const centralMock = getScarrowCentralMock(id);
+    if (centralMock) {
+      const onlineNodes = centralMock.nodes.filter((n) => n.online).length;
+      const totalNodes = centralMock.nodes.length;
+      this.device = {
+        historyKind: 'central' as const,
+        nodeName: centralMock.deviceName,
+        deviceName: centralMock.deviceName,
+        status: centralMock.online ? 'ON' : 'OFF',
+        location: centralMock.location,
+        battery: centralMock.batteryPercent,
+        model: centralMock.model,
+        deviceId: centralMock.id,
+        centralConnection: centralMock.online
+          ? `Connected (${onlineNodes}/${totalNodes} nodes online)`
+          : 'Disconnected',
+        version: centralMock.firmwareVersion,
+        owner: 'Hirono',
+        schedule: 'Schedule Device Active Time',
+        centralHistory: centralMock.history,
+      };
+      return;
+    }
+
     const central = findDeviceById(id);
     const label = central?.centralName ?? (id ? `Device ${id}` : 'Device');
 
     this.device = {
+      historyKind: 'legacy' as const,
       nodeName: label,
       deviceName: label,
       status: central ? (central.online ? 'ON' : 'OFF') : 'ON',

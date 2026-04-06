@@ -1,32 +1,81 @@
-<div class="device-content">
-  <div class="header-section">
-    <h3>Activity Logs</h3>
+<div class="app-page activitylogs-page">
+  <header class="page-header">
+    <p class="page-kicker">Member workspace</p>
+    <h1 class="page-title">Activity logs</h1>
+    <p class="page-lead al-lead">
+      Full history for <strong class="al-lead__name">{{ memberName() }}</strong>
+      @if (farmLabel(); as farm) {
+        <span class="al-lead__farm"> · {{ farm }}</span>
+      }
+      . Search by action or date.
+    </p>
+    @if (farmerId()) {
+      <p class="al-back">
+        <a [routerLink]="['/farmer', farmerId()]" class="al-back__link">← Back to member profile</a>
+      </p>
+    }
+  </header>
+
+  <div class="al-toolbar">
+    <label class="al-search">
+      <span class="al-search__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.5-3.5" stroke-linecap="round" />
+        </svg>
+      </span>
+      <input
+        type="search"
+        class="al-search__input"
+        placeholder="Search actions or dates"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </label>
   </div>
 
-  <div class="body-container">
-    <div class="search-box">
-      <input type="text" placeholder="Search Farmer Name/ Date" />
+  @if (filteredLogs().length === 0) {
+    <div class="al-empty" role="status">
+      <p class="al-empty__title">No matching entries</p>
+      <p class="al-empty__hint">Try another name, action keyword, or date.</p>
     </div>
-
-    <!-- ✅ Scrollable logs container -->
-    <div class="logs-scroll-area">
-      <div *ngFor="let group of activityLogs | groupByDate" class="activity-feed">
-        <h3 class="section-title">{{ group.date }}</h3>
-
-        <div *ngFor="let log of group.logs" class="activity-card">
-          <div class="user-info">
-            <img src="assets/peachbambi.jpg" alt="User" width="40" height="40" />
-            <div class="logs-info">
-              <p class="name">{{ log.user }}</p>
-              <div class="status-container">
-                <p class="action">{{ log.action }}</p>
-                <p class="time">{{ log.date | date: 'shortTime' }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  } @else {
+    <div class="al-feed">
+      @for (group of filteredLogs() | groupByDate; track group.date) {
+        <section class="al-day" [attr.aria-label]="'Activity on ' + group.date">
+          <h2 class="al-day__label">{{ group.date }}</h2>
+          <ul class="al-list" role="list">
+            @for (log of group.logs; track log.date + log.user + log.action) {
+              <li>
+                <article class="al-card">
+                  <div class="al-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <rect x="7" y="7" width="10" height="10" rx="1.5" />
+                      <path
+                        d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <div class="al-card__body">
+                    <span class="al-card__name">{{ log.user }}</span>
+                    <p class="al-card__action">
+                      <span class="al-card__k">Action</span>
+                      <span class="al-card__action-text">{{ log.action }}</span>
+                    </p>
+                    <p class="al-card__when">
+                      <span class="al-card__k">Time</span>
+                      {{ log.date | date: 'shortTime' }}
+                    </p>
+                  </div>
+                </article>
+              </li>
+            }
+          </ul>
+        </section>
+      }
     </div>
-    <!-- ✅ end logs-scroll-area -->
-  </div>
+  }
 </div>

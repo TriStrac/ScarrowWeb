@@ -1,5 +1,5 @@
-import { Component, HostListener, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, HostListener, inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NotificationService, JoinRequest } from '../../services/notification.service';
@@ -21,6 +21,7 @@ export type { OrgMember } from '../../data/demo-org-members';
 export class OrganizationComponent {
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   /** Pending users who asked to join (shown to org admins). */
   readonly joinRequests = toSignal(this.notifications.joinRequests, { initialValue: [] as JoinRequest[] });
@@ -40,6 +41,11 @@ export class OrganizationComponent {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeMemberModal();
+  }
+
+  scrollToInvite(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    document.getElementById('org-invite-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   openMemberModal(member: OrgMember): void {

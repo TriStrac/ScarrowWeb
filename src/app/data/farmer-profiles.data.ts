@@ -32,7 +32,7 @@ export const PROFILE_BY_ID: Record<string, FarmerProfile> = {
         frequencyHz: 200,
         lastTriggered: '45 seconds ago',
         location: 'Field A',
-        linkedNodeCount: 0,
+        linkedNodeCount: 3,
       },
     ],
   },
