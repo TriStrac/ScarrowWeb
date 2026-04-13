@@ -2,15 +2,10 @@ import { Component, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { ModalComponent } from '../../components/modal/modal.component';
-
-/** Replace with API: validate credentials then trigger OTP delivery. */
-const MOCK_USERS: Record<string, { phone: string; password: string }> = {
-  msgeared2000: { phone: '09535470539', password: 'msgeared2000' },
-  admin: { phone: '09123456789', password: 'admin' },
-};
-
-const OTP_TTL_MS = 10 * 60 * 1000;
+import { AuthService } from '../../services/auth.service';
+import { ScarrowApiService } from '../../services/scarrow-api.service';
 
 @Component({
   selector: 'app-login',
@@ -29,10 +24,16 @@ export class LoginComponent {
   showOtpModal = false;
   loginError = '';
   otpError = '';
+  otpIdentifier = '';
+  isSubmitting = false;
 
   @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private api: ScarrowApiService,
+    private auth: AuthService,
+  ) {}
 
   private focusOtpBox(index: number): void {
     setTimeout(() => {
@@ -42,88 +43,81 @@ export class LoginComponent {
     });
   }
 
-  private findUser(name: string): { phone: string; password: string } | undefined {
-    const key = name.trim().toLowerCase();
-    return MOCK_USERS[key];
-  }
-
-  /** Step 1: username + password, then open 2FA modal with issued OTP (demo: local only). */
-  submitLogin(): void {
+  /** Step 1: validate username/password, then request OTP from API. */
+  async submitLogin(): Promise<void> {
+    if (this.isSubmitting) return;
     this.loginError = '';
+    this.otpError = '';
     const name = this.username.trim();
     const pass = this.password;
     if (!name || !pass) {
       this.loginError = 'Please enter your username and password.';
       return;
     }
-    const user = this.findUser(name);
-    if (!user || user.password !== pass) {
+    this.isSubmitting = true;
+    try {
+      const response = await firstValueFrom(this.api.login(name, pass));
+      this.otpIdentifier = response.identifier || name;
+      this.maskedPhone = 'your registered number';
+      this.otpDigits = ['', '', '', '', '', ''];
+      this.otpFocusIndex = 0;
+      this.showOtpModal = true;
+      this.focusOtpBox(0);
+    } catch {
       this.loginError = 'Invalid username or password.';
-      return;
+    } finally {
+      this.isSubmitting = false;
     }
-    this.maskedPhone = user.phone;
-    this.issueOtp(name);
-    this.otpDigits = ['', '', '', '', '', ''];
-    this.otpFocusIndex = 0;
-    this.otpError = '';
-    this.showOtpModal = true;
-    this.focusOtpBox(0);
   }
 
-  private issueOtp(forUsername: string): void {
-    const code = '123456';
-    sessionStorage.setItem(
-      `otp_${forUsername.toLowerCase()}`,
-      JSON.stringify({ code, exp: Date.now() + OTP_TTL_MS }),
-    );
-    console.info('[Demo OTP]', forUsername, '→', code);
-  }
-
-  verifyAndLogin(): void {
+  async verifyAndLogin(): Promise<void> {
+    if (this.isSubmitting) return;
     this.otpError = '';
     const entered = this.otpDigits.join('');
     if (entered.length !== 6) {
       this.otpError = 'Please enter the complete 6-digit code.';
       return;
     }
-    const key = this.username.trim().toLowerCase();
-    const raw = sessionStorage.getItem(`otp_${key}`);
-    if (!raw) {
-      this.otpError = 'Code expired or missing. Request a new code.';
-      return;
-    }
-    let parsed: { code: string; exp: number };
+    this.isSubmitting = true;
     try {
-      parsed = JSON.parse(raw) as { code: string; exp: number };
+      const response = await firstValueFrom(this.api.verifyLogin(this.otpIdentifier, entered));
+      const userId = this.api.decodeUserIdFromJwt(response.token);
+      this.auth.setSession(response.token, userId, this.username.trim());
+      try {
+        const me = await firstValueFrom(this.api.getMe());
+        this.auth.applySessionMe(me);
+      } catch {
+        /* session extras optional until backend is reachable */
+      }
+      this.showOtpModal = false;
+      await this.router.navigate(['/dashboard']);
     } catch {
-      this.otpError = 'Invalid session. Please sign in again.';
-      return;
-    }
-    if (Date.now() > parsed.exp) {
-      sessionStorage.removeItem(`otp_${key}`);
-      this.otpError = 'Code expired. Tap Resend code.';
-      return;
-    }
-    if (entered !== parsed.code) {
       this.otpError = 'Invalid code. Please try again.';
-      return;
+    } finally {
+      this.isSubmitting = false;
     }
-    sessionStorage.removeItem(`otp_${key}`);
-    this.showOtpModal = false;
-    this.router.navigate(['/dashboard']);
   }
 
-  resendCode(): void {
+  async resendCode(): Promise<void> {
+    if (this.isSubmitting) return;
     this.otpError = '';
     const name = this.username.trim();
     if (!name) {
       this.showOtpModal = false;
       return;
     }
-    this.issueOtp(name);
-    this.otpDigits = ['', '', '', '', '', ''];
-    this.otpFocusIndex = 0;
-    this.focusOtpBox(0);
+    this.isSubmitting = true;
+    try {
+      const response = await firstValueFrom(this.api.login(name, this.password));
+      this.otpIdentifier = response.identifier || name;
+      this.otpDigits = ['', '', '', '', '', ''];
+      this.otpFocusIndex = 0;
+      this.focusOtpBox(0);
+    } catch {
+      this.otpError = 'Unable to resend code right now.';
+    } finally {
+      this.isSubmitting = false;
+    }
   }
 
   onOtpModalClose(): void {

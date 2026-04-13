@@ -4,29 +4,64 @@
     <h1>Subscriptions</h1>
   </div>
 
+  @if (loadError) {
+    <p class="subscription-details" role="alert">{{ loadError }}</p>
+  }
+
   <div class="subscription-details">
-    <h2 class="section-title">Current Subscription</h2>
+    <h2 class="section-title">Current subscription</h2>
     <div class="subscription-box">
       <div class="box-header">
-        <h3>FREE PLAN</h3>
-        <p>Lorem ipsum dolor siAt amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore.</p>
+        <h3>{{ currentStatus ?? 'Not subscribed' }}</h3>
+        <p *ngIf="currentPlanId">
+          Plan: <strong>{{ planLabel(currentPlanId) }}</strong>
+        </p>
+        <p *ngIf="currentStart">Started: {{ currentStart | date : 'mediumDate' }}</p>
+        <p *ngIf="currentEnd">Renews / ends: {{ currentEnd | date : 'mediumDate' }}</p>
+        <p *ngIf="!currentPlanId && !loadError">Sign in to see your subscription from the API.</p>
       </div>
-      <div class="box-action">
-        <span>Change Plan</span>
+    </div>
+  </div>
+
+  <div class="payment-section">
+    <h2 class="section-title">Plans</h2>
+    <div class="subscription-box">
+      <div class="box-header">
+        <div *ngFor="let p of plans" style="margin-bottom: 12px">
+          <label style="display: flex; gap: 8px; align-items: flex-start; cursor: pointer">
+            <input type="radio" name="planPick" [value]="p.id" [(ngModel)]="selectedPlanId" />
+            <span>
+              <strong>{{ p.name }}</strong>
+              <span *ngIf="p.price != null"> — {{ p.price | number : '1.0-0' }}</span>
+              <span *ngIf="p.duration_days"> / {{ p.duration_days }} days</span>
+              <br />
+              <small>{{ p.description }}</small>
+            </span>
+          </label>
+        </div>
+        <p *ngIf="plans.length === 0 && !loadError">No plans returned from the API.</p>
+      </div>
+      <div class="box-action" style="cursor: pointer" (click)="startCheckout()">
+        <span>{{ checkoutBusy ? 'Opening…' : 'Checkout selected plan' }}</span>
         <span class="arrow">›</span>
       </div>
     </div>
   </div>
 
   <div class="payment-section">
-    <h2 class="section-title">Payment info</h2>
+    <h2 class="section-title">Verify payment</h2>
     <div class="subscription-box">
       <div class="box-header">
-        <h3>Next Payment</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore.</p>
+        <p>After PayMongo (or your provider) completes payment, paste <code>reference_id</code> here if your flow requires it.</p>
+        <input
+          type="text"
+          [(ngModel)]="verifyReferenceId"
+          placeholder="reference_id"
+          style="width: 100%; padding: 8px; margin-top: 8px; box-sizing: border-box"
+        />
       </div>
-      <div class="box-action">
-        <span>Change payment method</span>
+      <div class="box-action" style="cursor: pointer" (click)="verifyPayment()">
+        <span>{{ verifyBusy ? 'Verifying…' : 'Verify / restore' }}</span>
         <span class="arrow">›</span>
       </div>
     </div>

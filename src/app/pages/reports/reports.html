@@ -1,5 +1,8 @@
 <div class="report-container">
   <h2>Reports</h2>
+  <p *ngIf="liveFromApi" class="report-scope-note">
+    Live summary from the API (<strong>{{ apiTimeframe || 'last_7_days' }}</strong>). Hub/node filters below still use demo device data when present.
+  </p>
 
   <div class="filters">
     <p class="report-scope-note">

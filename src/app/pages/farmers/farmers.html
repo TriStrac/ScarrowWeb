@@ -8,6 +8,7 @@
   </div>
 
   <div class="body-container">
+    <p *ngIf="loadError" class="search-box" style="margin-bottom: 8px">{{ loadError }}</p>
     <div class="search-box">
       <input type="text" [(ngModel)]="searchTerm" placeholder="Search farmer..." />
     </div>

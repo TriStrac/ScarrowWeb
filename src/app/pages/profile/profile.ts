@@ -1,6 +1,9 @@
 import { Component, HostListener, OnDestroy, OnInit, inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { ScarrowApiService } from '../../services/scarrow-api.service';
 
 export type ProfileSectionId = 'account' | 'subscriptions' | 'notifications' | 'support' | 'terms';
 
@@ -21,6 +24,8 @@ export type AccountEditModalId =
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService);
+  private readonly api = inject(ScarrowApiService);
 
   /** Accordions on small screens; sidebar + panel on wide screens */
   layout: 'compact' | 'wide' = 'wide';
@@ -88,9 +93,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     birthdate: '',
   };
 
-  readonly role = 'HEAD FARMER';
-  readonly farmName = 'Scarrow Demo Farm';
-  readonly isPremium = true;
+  role = 'HEAD FARMER';
+  farmName = 'Scarrow Demo Farm';
+  isPremium = true;
 
   selectedPlan: 'basic' | 'premium' = 'premium';
 
@@ -192,6 +197,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.mq = window.matchMedia('(max-width: 899px)');
     this.applyLayout();
     this.mq.addEventListener('change', this.mqHandler);
+    void this.loadProfileFromApi();
   }
 
   ngOnDestroy(): void {
@@ -364,5 +370,59 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   openMail() {
     window.location.href = 'mailto:scarrow@email.com?subject=Scarrow%20support';
+  }
+
+  private applySessionFromAuth(): void {
+    if (this.auth.groupName) {
+      this.farmName = this.auth.groupName;
+    }
+    const r = (this.auth.role ?? '').toUpperCase();
+    if (r === 'HEAD') this.role = 'HEAD FARMER';
+    else if (r) this.role = r.replace(/_/g, ' ');
+    const st = this.auth.subscriptionStatus;
+    if (st != null) {
+      this.isPremium = st !== 'FREE';
+    }
+  }
+
+  private async loadProfileFromApi(): Promise<void> {
+    this.applySessionFromAuth();
+    if (this.auth.token) {
+      try {
+        const me = await firstValueFrom(this.api.getMe());
+        this.auth.applySessionMe(me);
+        this.applySessionFromAuth();
+      } catch {
+        /* ignore */
+      }
+    }
+    const userId = this.auth.userId;
+    if (!userId) {
+      if (this.auth.username) {
+        this.user.username = this.auth.username;
+      }
+      return;
+    }
+    try {
+      const response = await firstValueFrom(this.api.getUserProfile(userId));
+      const user = response.user;
+      if (!user) return;
+      const firstName = user.profile?.first_name ?? this.user.firstName;
+      const lastName = user.profile?.last_name ?? this.user.lastName;
+      const phone = user.profile?.phone_number ?? this.user.phone;
+      const addressParts = [user.address?.street_name, user.address?.town].filter(Boolean);
+      this.user = {
+        ...this.user,
+        username: user.username ?? this.auth.username ?? this.user.username,
+        firstName,
+        lastName,
+        phone,
+        address: addressParts.length ? addressParts.join(', ') : this.user.address,
+      };
+    } catch {
+      if (this.auth.username) {
+        this.user.username = this.auth.username;
+      }
+    }
   }
 }

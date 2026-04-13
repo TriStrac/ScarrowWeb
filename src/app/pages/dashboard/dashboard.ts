@@ -1,8 +1,11 @@
-import { Component, HostListener, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../services/notification.service';
+import { AuthService } from '../../services/auth.service';
+import { ScarrowApiService } from '../../services/scarrow-api.service';
 
 export interface MemberCard {
   id: string;
@@ -22,9 +25,11 @@ export interface MemberCard {
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
+  private readonly auth = inject(AuthService);
+  private readonly api = inject(ScarrowApiService);
 
   /** Combined join + message counts for the bell. */
   readonly notifSummary = toSignal(this.notifications.summary$, {
@@ -36,7 +41,7 @@ export class DashboardComponent {
   /** Panel for quick links; closes on outside click. */
   panelOpen = false;
 
-  displayName = 'admintester';
+  displayName = this.auth.username ?? 'Head Farmer';
 
   /** When set, the member quick-preview dialog is visible. */
   previewMember: MemberCard | null = null;
@@ -71,6 +76,26 @@ export class DashboardComponent {
     },
   ];
 
+  async ngOnInit(): Promise<void> {
+    const gid = this.auth.groupId;
+    const orgName = this.auth.groupName ?? 'Organization';
+    if (!gid) return;
+    try {
+      const apiMembers = await firstValueFrom(this.api.getGroupMembers(gid));
+      if (!apiMembers.length) return;
+      this.members = apiMembers.map((m) => ({
+        id: m.user_id,
+        name: m.display_name,
+        farmName: orgName,
+        address: '—',
+        phone: '—',
+        deviceCount: 0,
+        role: m.role === 'HEAD' ? 'Head' : m.role === 'MEMBER' ? 'Farmer' : m.role,
+      }));
+    } catch {
+      /* keep demo roster */
+    }
+  }
 
   memberInitial(name: string): string {
     const t = name.trim();

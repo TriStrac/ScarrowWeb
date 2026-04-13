@@ -4,6 +4,7 @@ import {
   OnInit,
   Inject,
   PLATFORM_ID,
+  inject,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +13,8 @@ import {
   getAllReportPestEvents,
   type ReportPestEvent,
 } from '../../data/scarrow-devices.data';
+import { firstValueFrom } from 'rxjs';
+import { ScarrowApiService } from '../../services/scarrow-api.service';
 
 function localDateKey(iso: string): string {
   const d = new Date(iso);
@@ -32,6 +35,12 @@ const CHART_PALETTE = ['#166534', '#0d9488', '#6366f1', '#c2410c', '#7c3aed'];
   styleUrls: ['./reports.css'],
 })
 export class ReportComponent implements OnInit, AfterViewInit {
+  private readonly api = inject(ScarrowApiService);
+
+  /** When set, chart + headline totals prefer `GET /reports/summary`. */
+  liveFromApi = false;
+  apiTimeframe = '';
+  private apiDailyTrends: { count: number; date: string }[] = [];
   /** Central hubs that have paired node data. */
   hubOptions: { id: string; name: string }[] = [];
   selectedHubs: { id: string; name: string }[] = [];
@@ -65,6 +74,7 @@ export class ReportComponent implements OnInit, AfterViewInit {
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
   ngOnInit(): void {
+    void this.tryLoadApiSummary();
     this.allEvents = getAllReportPestEvents().sort(
       (a, b) => +new Date(b.occurredAt) - +new Date(a.occurredAt),
     );
@@ -80,6 +90,29 @@ export class ReportComponent implements OnInit, AfterViewInit {
       ...new Set(this.allEvents.map((e) => e.location)),
     ].sort();
     this.applyFilters();
+  }
+
+  private async tryLoadApiSummary(): Promise<void> {
+    try {
+      const s = await firstValueFrom(this.api.getReportsSummary('last_7_days'));
+      const dist = s.pest_distribution ?? {};
+      const entries = Object.entries(dist);
+      if (entries.length || (s.daily_trends?.length ?? 0) > 0) {
+        this.liveFromApi = true;
+        this.apiTimeframe = s.timeframe ?? 'last_7_days';
+        this.apiDailyTrends = s.daily_trends ?? [];
+        this.mostPests = entries
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count);
+        this.totalTriggered = s.overview?.total_alerts ?? entries.reduce((a, [, c]) => a + c, 0);
+        this.totalActiveMins = 0;
+        if (isPlatformBrowser(this.platformId)) {
+          this.renderChart();
+        }
+      }
+    } catch {
+      /* demo data only */
+    }
   }
 
   ngAfterViewInit(): void {
@@ -202,6 +235,53 @@ export class ReportComponent implements OnInit, AfterViewInit {
     if (this.chart) {
       this.chart.destroy();
       this.chart = undefined;
+    }
+
+    if (this.liveFromApi && this.apiDailyTrends.length > 0) {
+      const labels = this.apiDailyTrends.map((d) => d.date);
+      const data = this.apiDailyTrends.map((d) => d.count);
+      this.hasChartData = data.some((n) => n > 0);
+      if (!labels.length) return;
+      const colors = labels.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]);
+      this.chart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Alerts per day',
+              data,
+              backgroundColor: colors.map((c) => `${c}cc`),
+              borderColor: colors,
+              borderWidth: 1.5,
+              borderRadius: 8,
+              maxBarThickness: 48,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11 }, maxRotation: 35, minRotation: 0 },
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Count',
+                font: { size: 12, weight: 500 },
+              },
+              ticks: { stepSize: 1 },
+              grid: { color: '#f1f5f9' },
+            },
+          },
+        },
+      });
+      return;
     }
 
     const byDevice = new Map<string, number>();

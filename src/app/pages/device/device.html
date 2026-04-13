@@ -5,6 +5,7 @@
   </div>
 
   <div class="body-container">
+    <p *ngIf="loadError" class="device-hint">{{ loadError }}</p>
     <div class="search-box">
       <input type="text" [(ngModel)]="searchTerm" placeholder="Search Device Name" />
     </div>

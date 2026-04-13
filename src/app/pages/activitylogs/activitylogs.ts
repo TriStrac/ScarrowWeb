@@ -2,10 +2,14 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GroupByDatePipe } from '../../utils/pipes/groupBydate.pipe';
 import { PROFILE_BY_ID } from '../../data/farmer-profiles.data';
 import { getFarmerActivityLogs } from '../../data/farmer-activity-logs.data';
+import { ApiActivityLog, ScarrowApiService } from '../../services/scarrow-api.service';
+
+type ActivityLogItem = { user: string; action: string; date: string };
 
 @Component({
   selector: 'app-activity-logs',
@@ -16,6 +20,8 @@ import { getFarmerActivityLogs } from '../../data/farmer-activity-logs.data';
 })
 export class ActivityLogsComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly api = inject(ScarrowApiService);
+  readonly apiLogs = signal<ActivityLogItem[] | null>(null);
 
   readonly farmerId = toSignal(
     this.route.paramMap.pipe(map((p) => p.get('farmerId') ?? '')),
@@ -31,7 +37,11 @@ export class ActivityLogsComponent {
 
   readonly farmLabel = computed(() => this.memberProfile()?.farmName ?? null);
 
-  readonly activityLogs = computed(() => getFarmerActivityLogs(this.farmerId(), this.memberName()));
+  readonly activityLogs = computed(() => {
+    const live = this.apiLogs();
+    if (live && live.length > 0) return live;
+    return getFarmerActivityLogs(this.farmerId(), this.memberName());
+  });
 
   readonly searchQuery = signal('');
 
@@ -53,4 +63,27 @@ export class ActivityLogsComponent {
       );
     });
   });
+
+  constructor() {
+    void this.loadActivityLogs();
+  }
+
+  private async loadActivityLogs(): Promise<void> {
+    try {
+      const rows = await firstValueFrom(this.api.getMyActivityLogs());
+      if (!Array.isArray(rows) || rows.length === 0) return;
+      this.apiLogs.set(rows.map((r) => this.toActivityLogItem(r)));
+    } catch {
+      // Keep existing local demo logs.
+    }
+  }
+
+  private toActivityLogItem(log: ApiActivityLog): ActivityLogItem {
+    const when = log.created_at ?? log.timestamp ?? new Date().toISOString();
+    return {
+      user: log.actor_name ?? log.user ?? this.memberName(),
+      action: log.action ?? log.message ?? 'Activity recorded',
+      date: when,
+    };
+  }
 }

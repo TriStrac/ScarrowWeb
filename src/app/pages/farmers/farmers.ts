@@ -1,31 +1,43 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { AuthService } from '../../services/auth.service';
+import { ScarrowApiService } from '../../services/scarrow-api.service';
 
-// Import your modal component
-// import { ModalComponent } from '../modal/modal.component'; // Adjust path as needed
+export type FarmerRow = {
+  id: string;
+  name: string;
+  deviceCount: number;
+  activeDeviceCount: number;
+};
 
 @Component({
   selector: 'app-farmers',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent], // Add ModalComponent here when you import it
+  imports: [CommonModule, FormsModule, ModalComponent],
   templateUrl: './farmers.html',
   styleUrls: ['./farmers.css'],
-  encapsulation: ViewEncapsulation.None // Add this for modal styling
+  encapsulation: ViewEncapsulation.None,
 })
-export class FarmersComponent {
-  searchTerm: string = '';
+export class FarmersComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly api = inject(ScarrowApiService);
 
-  farmers = [
-    { id: 1, name: 'Hirono', deviceCount: 12, activeDeviceCount: 10 },
-    { id: 2, name: 'Kelly', deviceCount: 10, activeDeviceCount: 10 },
-    { id: 3, name: 'Leigh', deviceCount: 8, activeDeviceCount: 5 },
-    { id: 4, name: 'Namie', deviceCount: 9, activeDeviceCount: 7 }
+  searchTerm = '';
+
+  farmers: FarmerRow[] = [
+    { id: '1', name: 'Hirono', deviceCount: 12, activeDeviceCount: 10 },
+    { id: '2', name: 'Kelly', deviceCount: 10, activeDeviceCount: 10 },
+    { id: '3', name: 'Leigh', deviceCount: 8, activeDeviceCount: 5 },
+    { id: '4', name: 'Namie', deviceCount: 9, activeDeviceCount: 7 },
   ];
 
-  // Modal properties
+  loadError = '';
+
   isModalOpen = false;
   newFarmer = {
     name: '',
@@ -33,117 +45,107 @@ export class FarmersComponent {
     phone: '',
     address: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   };
 
-  // Edit modes for fields with change buttons
   editModes = {
     phone: false,
     address: false,
-    password: false
+    password: false,
   };
 
   showPassword = false;
   showConfirmPassword = false;
 
-  constructor(private router: Router) {}
+  async ngOnInit(): Promise<void> {
+    const gid = this.auth.groupId;
+    if (!gid) {
+      this.loadError = 'Sign in to load your organization roster.';
+      return;
+    }
+    try {
+      const rows = await firstValueFrom(this.api.getGroupMembers(gid));
+      if (!rows.length) return;
+      this.farmers = rows
+        .filter((m) => (m.role ?? '').toUpperCase() !== 'HEAD')
+        .map((m) => ({
+          id: m.user_id,
+          name: m.display_name,
+          deviceCount: 0,
+          activeDeviceCount: 0,
+        }));
+    } catch {
+      this.loadError = 'Could not load farmers from the server.';
+    }
+  }
 
-  filteredFarmers() {
+  filteredFarmers(): FarmerRow[] {
     if (!this.searchTerm) return this.farmers;
-    return this.farmers.filter(farmer =>
-      farmer.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+    return this.farmers.filter((farmer) =>
+      farmer.name.toLowerCase().includes(this.searchTerm.toLowerCase()),
     );
   }
 
-  // Open modal for adding farmer
-  addFarmer() {
-    // Reset form data
+  addFarmer(): void {
     this.newFarmer = {
       name: '',
       email: '',
       phone: '',
       address: '',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
     };
-
-    // Reset edit modes
-    this.editModes = {
-      phone: false,
-      address: false,
-      password: false
-    };
-
-    // Reset password visibility
+    this.editModes = { phone: false, address: false, password: false };
     this.showPassword = false;
     this.showConfirmPassword = false;
-
-    // Open modal
     this.isModalOpen = true;
   }
 
-  // Close modal
-  closeModal() {
+  closeModal(): void {
     this.isModalOpen = false;
   }
 
-  // Toggle edit mode for fields with change buttons
-  toggleEditMode(field: keyof typeof this.editModes) {
+  toggleEditMode(field: keyof typeof this.editModes): void {
     if (this.editModes[field]) {
-      // Save the field (you can add validation here)
       console.log(`Saved ${field}:`, this.newFarmer[field]);
     }
     this.editModes[field] = !this.editModes[field];
   }
 
-  // Toggle password visibility
-  togglePasswordVisibility() {
+  togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
 
-  toggleConfirmPasswordVisibility() {
+  toggleConfirmPasswordVisibility(): void {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  // Create new farmer
-  createUser() {
-    // Basic validation
+  createUser(): void {
     if (!this.newFarmer.name || !this.newFarmer.email) {
       alert('Please fill in required fields (Name and Email)');
       return;
     }
-
     if (this.newFarmer.password !== this.newFarmer.confirmPassword) {
       alert('Passwords do not match');
       return;
     }
-
-    // Create new farmer object
-    const newId = Math.max(...this.farmers.map(f => f.id)) + 1;
-    const farmer = {
-      id: newId,
-      name: this.newFarmer.name,
-      deviceCount: Math.floor(Math.random() * 15) + 1,
-      activeDeviceCount: Math.floor(Math.random() * 10) + 1
-    };
-
-    // Add to farmers array
-    this.farmers.push(farmer);
-
-    console.log('New farmer created:', farmer);
-    console.log('Farmer details:', this.newFarmer);
-
-    // Close modal
+    alert('Member registration is handled on the API (POST /users/). Use invite codes from Organization for now.');
     this.closeModal();
   }
 
-  goToFarmer(farmer: any) {
-    this.router.navigate(['/farmer', farmer.id]);
+  goToFarmer(farmer: FarmerRow): void {
+    void this.router.navigate(['/farmer', farmer.id]);
   }
 
-  deleteFarmer(farmer: any) {
-    if (confirm(`Are you sure you want to delete ${farmer.name}?`)) {
-      this.farmers = this.farmers.filter(f => f.id !== farmer.id);
+  deleteFarmer(farmer: FarmerRow): void {
+    if (confirm(`Remove ${farmer.name} from the organization?`)) {
+      const gid = this.auth.groupId;
+      if (!gid) return;
+      void firstValueFrom(this.api.removeGroupMember(gid, farmer.id))
+        .then(() => {
+          this.farmers = this.farmers.filter((f) => f.id !== farmer.id);
+        })
+        .catch(() => alert('Could not remove member.'));
     }
   }
 }

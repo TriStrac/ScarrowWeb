@@ -1,9 +1,18 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterModule } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { Subscription } from 'rxjs';
 import { NotificationService } from '../../services/notification.service';
+import { ScarrowApiService } from '../../services/scarrow-api.service';
+import {
+  ApiMessageThread,
+  ApiThreadMessage,
+  MessagesApiService,
+} from '../../services/messages-api.service';
+import { AuthService } from '../../services/auth.service';
 import {
   DEMO_ORG_MEMBERS,
   DEMO_ORG_NAME,
@@ -18,11 +27,12 @@ export interface InboxItem {
   preview: string;
   time: string;
   unread: boolean;
-  /** Shown on the contact screen; defaults to sender */
   displayName?: string;
   phone?: string;
   organization?: string;
   contactSubtitle?: string;
+  /** Other participant user id (for POST /messages/) */
+  peerUserId?: string;
 }
 
 export interface ThreadMessage {
@@ -36,7 +46,7 @@ export interface ThreadMessage {
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './messages.html',
   styleUrls: ['./messages.css'],
 })
@@ -45,88 +55,40 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly notifications = inject(NotificationService);
+  private readonly scarrow = inject(ScarrowApiService);
+  private readonly messagesApi = inject(MessagesApiService);
+  private readonly auth = inject(AuthService);
   private sub?: Subscription;
 
   private readonly unreadStorageKey = 'scarrow_inbox_unread_v1';
 
-  /** Demo signed-in user — same id as Organization “Head Admin”; excluded from compose list. */
-  readonly demoCurrentUserId = '1';
+  /** Excluded from compose list */
+  private currentUserId = '';
 
   conversationId: string | null = null;
   contactView = false;
-
-  /** Filter inbox list (name, preview, subject). */
   inboxSearch = '';
-
-  /** “New message” picker (organization members). */
   composeOpen = false;
 
-  inbox: InboxItem[] = [
-    {
-      id: '1',
-      sender: 'System',
-      subject: 'Device sync completed',
-      preview: 'North Field Sensor finished uploading logs…',
-      time: '2h ago',
-      unread: true,
-      phone: '+1 (555) 010-1000',
-      organization: 'Scarrow',
-      contactSubtitle: 'Direct message contact',
-    },
-    {
-      id: '2',
-      sender: 'Maria Santos',
-      subject: 'Weekly field report',
-      preview: 'Attached summary for Zone A moisture readings…',
-      time: 'Yesterday',
-      unread: false,
-      phone: '+63 917 000 0000',
-      organization: 'Green Valley Co-op',
-      contactSubtitle: 'Direct message contact',
-    },
-    {
-      id: '3',
-      sender: 'Scarrow Support',
-      displayName: 'Scarrow Support',
-      subject: 'Subscription renewal',
-      preview: 'Your plan renews on the 15th. Reply with questions.',
-      time: 'Mon',
-      unread: false,
-      phone: '+1 (555) 010-1001',
-      organization: 'Scarrow',
-      contactSubtitle: 'Direct message contact',
-    },
-  ];
+  /** Composer */
+  composerText = '';
+  sending = false;
+  threadLoadError = '';
 
-  threads: Record<string, ThreadMessage[]> = {
-    '1': [
-      { id: 'a', author: 'System', body: 'North Field Sensor finished uploading logs at 09:42.', time: '10:12', self: false },
-      { id: 'b', author: 'You', body: 'Thanks — I will review the dashboard.', time: '10:18', self: true },
-    ],
-    '2': [
-      { id: 'a', author: 'Maria Santos', body: 'Hi team, here is the weekly summary for Zone A.', time: 'Mon 08:00', self: false },
-      { id: 'b', author: 'You', body: 'Received. Adding to the org report.', time: 'Mon 09:15', self: true },
-    ],
-    '3': [
-      {
-        id: 'a',
-        author: 'Scarrow Support',
-        body: 'Hello, your subscription renews soon. Need help with billing?',
-        time: '09:00',
-        self: false,
-      },
-    ],
-  };
+  inbox: InboxItem[] = [];
+  threads: Record<string, ThreadMessage[]> = {};
+
+  /** Members for “new message” (from group API when available). */
+  composeMembers: { id: string; name: string; username: string; roleBadge: string }[] = [];
+
+  private useLiveInbox = false;
 
   ngOnInit(): void {
-    this.applyUnreadFromStorage();
-    this.pushUnreadCount();
+    this.currentUserId = this.auth.userId ?? '1';
+    void this.loadComposeMembers();
+    void this.bootstrapInbox();
     this.sub = this.route.queryParamMap.subscribe((params) => {
-      this.applyContactVisibilityFromParams(params);
-      const thread = params.get('thread');
-      if (thread) {
-        this.markThreadRead(thread);
-      }
+      void this.onQueryParams(params);
     });
   }
 
@@ -134,14 +96,52 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  /**
-   * Contact panel only when `contact=1` or `contact=true` (opened via the info button).
-   * Legacy `user` query (without `thread`) redirects to `thread=dm-{userId}`.
-   */
-  private applyContactVisibilityFromParams(params: ParamMap): void {
+  private async bootstrapInbox(): Promise<void> {
+    await this.loadInboxFromApi();
+    this.applyUnreadFromStorage();
+    if (this.useLiveInbox) {
+      await this.refreshUnreadSummary();
+    } else {
+      this.pushUnreadCount();
+    }
+  }
+
+  private async loadComposeMembers(): Promise<void> {
+    const gid = this.auth.groupId;
+    if (!gid) {
+      this.composeMembers = DEMO_ORG_MEMBERS.filter((m) => m.id !== this.currentUserId).map((m) => ({
+        id: m.id,
+        name: m.name,
+        username: m.username,
+        roleBadge: m.roleBadge,
+      }));
+      return;
+    }
+    try {
+      const rows = await firstValueFrom(this.scarrow.getGroupMembers(gid));
+      this.composeMembers = rows
+        .filter((r) => r.user_id !== this.auth.userId)
+        .map((r) => ({
+          id: r.user_id,
+          name: r.display_name,
+          username: r.display_name.startsWith('@') ? r.display_name : `@${r.display_name}`,
+          roleBadge: (r.role ?? '').toUpperCase() === 'HEAD' ? 'Admin' : 'Farmer',
+        }));
+    } catch {
+      this.composeMembers = DEMO_ORG_MEMBERS.filter((m) => m.id !== this.currentUserId).map((m) => ({
+        id: m.id,
+        name: m.name,
+        username: m.username,
+        roleBadge: m.roleBadge,
+      }));
+    }
+  }
+
+  private async onQueryParams(params: ParamMap): Promise<void> {
+    const receiver = params.get('receiver');
     const user = params.get('user');
     const thread = params.get('thread');
-    if (user && !thread) {
+    if (user && !thread && !receiver) {
       void this.router.navigate(['/messages'], {
         queryParams: { thread: dmThreadIdForMember(user) },
         replaceUrl: true,
@@ -149,6 +149,25 @@ export class MessagesComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (receiver) {
+      this.ensureReceiverThread(receiver);
+      this.conversationId = `pending-${receiver}`;
+      const c = params.get('contact');
+      this.contactView = c === '1' || c === 'true';
+      await this.loadThreadHistoryIfNeeded();
+      return;
+    }
+
+    this.applyContactVisibilityFromParams(params);
+    const t = params.get('thread');
+    if (t) {
+      this.markThreadRead(t);
+      await this.loadThreadHistoryIfNeeded();
+    }
+  }
+
+  private applyContactVisibilityFromParams(params: ParamMap): void {
+    const thread = params.get('thread');
     this.conversationId = thread;
     const c = params.get('contact');
     if (!this.conversationId) {
@@ -159,17 +178,57 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.contactView = c === '1' || c === 'true';
   }
 
-  /**
-   * Org DMs use ids `dm-{memberId}` so they never collide with system threads `1`, `2`, `3`.
-   * Creates inbox row + empty thread when messaging a member from Organization (or Compose).
-   */
+  private ensureReceiverThread(receiverId: string): void {
+    const existing = this.inbox.find((i) => i.id === `pending-${receiverId}`);
+    if (existing) {
+      this.threads = { ...this.threads, [`pending-${receiverId}`]: this.threads[`pending-${receiverId}`] ?? [] };
+      return;
+    }
+    const fromOrg = this.composeMembers.find((m) => m.id === receiverId);
+    const name = fromOrg?.name ?? 'Member';
+    const item: InboxItem = {
+      id: `pending-${receiverId}`,
+      sender: name,
+      displayName: name,
+      subject: `Message ${name}`,
+      preview: 'No messages yet — say hello.',
+      time: 'Now',
+      unread: false,
+      phone: '—',
+      organization: this.auth.groupName ?? DEMO_ORG_NAME,
+      contactSubtitle: 'Organization member',
+      peerUserId: receiverId,
+    };
+    this.inbox = [item, ...this.inbox.filter((i) => i.id !== item.id)];
+    this.threads = { ...this.threads, [item.id]: [] };
+  }
+
   private ensureDirectMessageThread(conversationId: string): void {
     if (!conversationId.startsWith('dm-')) return;
     if (this.inbox.some((i) => i.id === conversationId)) return;
 
     const memberId = conversationId.slice('dm-'.length);
     const member = getOrgMemberById(memberId);
-    if (!member) return;
+    if (!member) {
+      const fallback = this.composeMembers.find((m) => m.id === memberId);
+      if (!fallback) return;
+      const item: InboxItem = {
+        id: conversationId,
+        sender: fallback.name,
+        displayName: fallback.name,
+        subject: `Message ${fallback.name}`,
+        preview: 'No messages yet — say hello.',
+        time: 'Now',
+        unread: false,
+        phone: '—',
+        organization: this.auth.groupName ?? DEMO_ORG_NAME,
+        contactSubtitle: 'Organization member',
+        peerUserId: memberId,
+      };
+      this.inbox = [...this.inbox, item];
+      this.threads = { ...this.threads, [conversationId]: [] };
+      return;
+    }
 
     const item: InboxItem = {
       id: conversationId,
@@ -182,6 +241,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       phone: member.phone,
       organization: DEMO_ORG_NAME,
       contactSubtitle: 'Organization member',
+      peerUserId: memberId,
     };
     this.inbox = [...this.inbox, item];
     this.threads = { ...this.threads, [conversationId]: [] };
@@ -252,11 +312,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return this.threads[this.conversationId] ?? [];
   }
 
-  currentSubject(): string {
-    const item = this.inbox.find((i) => i.id === this.conversationId);
-    return item?.subject ?? 'Conversation';
-  }
-
   threadHeaderName(): string {
     const item = this.currentInboxItem();
     return item?.displayName ?? item?.sender ?? 'Conversation';
@@ -276,7 +331,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   composeableMembers() {
-    return DEMO_ORG_MEMBERS.filter((m) => m.id !== this.demoCurrentUserId);
+    return this.composeMembers;
   }
 
   openCompose(): void {
@@ -291,8 +346,208 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.closeCompose();
     this.inboxSearch = '';
     void this.router.navigate(['/messages'], {
-      queryParams: { thread: dmThreadIdForMember(memberId) },
+      queryParams: { receiver: memberId },
     });
+  }
+
+  canSend(): boolean {
+    if (!this.conversationId || this.sending) return false;
+    return this.resolveReceiverId() !== null && this.composerText.trim().length > 0;
+  }
+
+  async sendMessage(): Promise<void> {
+    if (!this.canSend()) return;
+    const receiverId = this.resolveReceiverId();
+    if (!receiverId) return;
+    const text = this.composerText.trim();
+    this.sending = true;
+    this.threadLoadError = '';
+    try {
+      await firstValueFrom(this.messagesApi.sendMessage(receiverId, text));
+      this.composerText = '';
+      if (this.conversationId?.startsWith('pending-')) {
+        await this.loadInboxFromApi();
+        const match = this.inbox.find((i) => i.peerUserId === receiverId && !i.id.startsWith('pending-'));
+        if (match) {
+          void this.router.navigate(['/messages'], { queryParams: { thread: match.id } });
+        }
+      } else if (this.conversationId) {
+        await this.fetchAndStoreThread(this.conversationId);
+      }
+      await this.refreshUnreadSummary();
+      this.pushUnreadCount();
+    } catch {
+      this.threadLoadError = 'Could not send message.';
+    } finally {
+      this.sending = false;
+    }
+  }
+
+  private resolveReceiverId(): string | null {
+    const item = this.currentInboxItem();
+    if (item?.peerUserId) return item.peerUserId;
+    if (this.conversationId?.startsWith('pending-')) {
+      return this.conversationId.slice('pending-'.length);
+    }
+    if (this.conversationId?.startsWith('dm-')) {
+      return this.conversationId.slice('dm-'.length);
+    }
+    return item?.peerUserId ?? null;
+  }
+
+  private async loadThreadHistoryIfNeeded(): Promise<void> {
+    const id = this.conversationId;
+    if (!id || id.startsWith('pending-') || id.startsWith('dm-')) return;
+    await this.fetchAndStoreThread(id);
+  }
+
+  private async fetchAndStoreThread(threadId: string): Promise<void> {
+    if (threadId.startsWith('pending-') || threadId.startsWith('dm-')) return;
+    if (!this.useLiveInbox) return;
+    try {
+      const msgs = await firstValueFrom(this.messagesApi.getThreadMessages(threadId));
+      const mapped = msgs.map((m, idx) => this.mapThreadMessage(m, idx));
+      this.threads = { ...this.threads, [threadId]: mapped };
+      void this.refreshUnreadSummary();
+    } catch {
+      this.threadLoadError = 'Could not load messages for this thread.';
+    }
+  }
+
+  private mapThreadMessage(m: ApiThreadMessage, idx: number): ThreadMessage {
+    const selfId = this.auth.userId;
+    const senderId = m.sender_id;
+    const body = m.content ?? m.body ?? '';
+    const when = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+    return {
+      id: m.id ?? `m-${idx}`,
+      author: m.sender_name ?? (senderId && selfId && senderId === selfId ? 'You' : 'Member'),
+      body,
+      time: when,
+      self: Boolean(selfId && senderId && senderId === selfId),
+    };
+  }
+
+  private async loadInboxFromApi(): Promise<void> {
+    try {
+      const threads = await firstValueFrom(this.messagesApi.listThreads());
+      if (!Array.isArray(threads) || threads.length === 0) {
+        this.useDemoInbox();
+        return;
+      }
+      this.useLiveInbox = true;
+      this.inbox = threads.map((t) => this.toInboxItem(t));
+      const mappedThreads: Record<string, ThreadMessage[]> = {};
+      for (const t of threads) {
+        mappedThreads[t.id] = [];
+      }
+      this.threads = mappedThreads;
+      await this.refreshUnreadSummary();
+    } catch {
+      this.useDemoInbox();
+    }
+  }
+
+  private useDemoInbox(): void {
+    this.useLiveInbox = false;
+    this.inbox = [
+      {
+        id: '1',
+        sender: 'System',
+        subject: 'Device sync completed',
+        preview: 'North Field Sensor finished uploading logs…',
+        time: '2h ago',
+        unread: true,
+        phone: '+1 (555) 010-1000',
+        organization: 'Scarrow',
+        contactSubtitle: 'Direct message contact',
+      },
+      {
+        id: '2',
+        sender: 'Maria Santos',
+        subject: 'Weekly field report',
+        preview: 'Attached summary for Zone A moisture readings…',
+        time: 'Yesterday',
+        unread: false,
+        phone: '+63 917 000 0000',
+        organization: 'Green Valley Co-op',
+        contactSubtitle: 'Direct message contact',
+      },
+      {
+        id: '3',
+        sender: 'Scarrow Support',
+        displayName: 'Scarrow Support',
+        subject: 'Subscription renewal',
+        preview: 'Your plan renews on the 15th. Reply with questions.',
+        time: 'Mon',
+        unread: false,
+        phone: '+1 (555) 010-1001',
+        organization: 'Scarrow',
+        contactSubtitle: 'Direct message contact',
+      },
+    ];
+    this.threads = {
+      '1': [
+        { id: 'a', author: 'System', body: 'North Field Sensor finished uploading logs at 09:42.', time: '10:12', self: false },
+        { id: 'b', author: 'You', body: 'Thanks — I will review the dashboard.', time: '10:18', self: true },
+      ],
+      '2': [
+        { id: 'a', author: 'Maria Santos', body: 'Hi team, here is the weekly summary for Zone A.', time: 'Mon 08:00', self: false },
+        { id: 'b', author: 'You', body: 'Received. Adding to the org report.', time: 'Mon 09:15', self: true },
+      ],
+      '3': [
+        {
+          id: 'a',
+          author: 'Scarrow Support',
+          body: 'Hello, your subscription renews soon. Need help with billing?',
+          time: '09:00',
+          self: false,
+        },
+      ],
+    };
+  }
+
+  private async refreshUnreadSummary(): Promise<void> {
+    try {
+      const s = await firstValueFrom(this.messagesApi.getUnreadSummary());
+      this.notifications.setUnreadMessageCount(s.unread_count ?? 0);
+    } catch {
+      if (!this.useLiveInbox) {
+        this.pushUnreadCount();
+      }
+    }
+  }
+
+  private toInboxItem(thread: ApiMessageThread): InboxItem {
+    const peer =
+      thread.other_user_id ?? thread.peer_user_id ?? thread.receiver_id;
+    return {
+      id: thread.id,
+      sender: thread.sender_name ?? 'Conversation',
+      displayName: thread.sender_name ?? 'Conversation',
+      subject: thread.title ?? 'Message',
+      preview: thread.latest_message ?? 'No messages yet.',
+      time: this.toRelativeTime(thread.updated_at),
+      unread: Boolean(thread.unread),
+      phone: '—',
+      organization: this.auth.groupName ?? 'Scarrow',
+      contactSubtitle: 'Direct message contact',
+      peerUserId: peer,
+    };
+  }
+
+  private toRelativeTime(value?: string): string {
+    if (!value) return 'Now';
+    const parsed = Date.parse(value);
+    if (Number.isNaN(parsed)) return 'Now';
+    const diffMs = Math.max(0, Date.now() - parsed);
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'Now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
   }
 
   private applyUnreadFromStorage(): void {
@@ -335,6 +590,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     next[idx] = { ...next[idx], unread: false };
     this.inbox = next;
     this.saveUnreadToStorage();
-    this.pushUnreadCount();
+    if (this.useLiveInbox) {
+      void this.refreshUnreadSummary();
+    } else {
+      this.pushUnreadCount();
+    }
   }
 }
