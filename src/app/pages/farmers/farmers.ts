@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -26,17 +26,13 @@ export class FarmersComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly api = inject(ScarrowApiService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   searchTerm = '';
-
-  farmers: FarmerRow[] = [
-    { id: '1', name: 'Hirono', deviceCount: 12, activeDeviceCount: 10 },
-    { id: '2', name: 'Kelly', deviceCount: 10, activeDeviceCount: 10 },
-    { id: '3', name: 'Leigh', deviceCount: 8, activeDeviceCount: 5 },
-    { id: '4', name: 'Namie', deviceCount: 9, activeDeviceCount: 7 },
-  ];
-
+  isLoading = true;
   loadError = '';
+
+  farmers: FarmerRow[] = [];
 
   isModalOpen = false;
   newFarmer = {
@@ -58,14 +54,17 @@ export class FarmersComponent implements OnInit {
   showConfirmPassword = false;
 
   async ngOnInit(): Promise<void> {
+    this.isLoading = true;
+    this.loadError = '';
     const gid = this.auth.groupId;
     if (!gid) {
       this.loadError = 'Sign in to load your organization roster.';
+      this.isLoading = false;
+      this.cdr.markForCheck();
       return;
     }
     try {
       const rows = await firstValueFrom(this.api.getGroupMembers(gid));
-      if (!rows.length) return;
       this.farmers = rows
         .filter((m) => (m.role ?? '').toUpperCase() !== 'HEAD')
         .map((m) => ({
@@ -76,6 +75,9 @@ export class FarmersComponent implements OnInit {
         }));
     } catch {
       this.loadError = 'Could not load farmers from the server.';
+    } finally {
+      this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -106,9 +108,6 @@ export class FarmersComponent implements OnInit {
   }
 
   toggleEditMode(field: keyof typeof this.editModes): void {
-    if (this.editModes[field]) {
-      console.log(`Saved ${field}:`, this.newFarmer[field]);
-    }
     this.editModes[field] = !this.editModes[field];
   }
 
@@ -129,7 +128,7 @@ export class FarmersComponent implements OnInit {
       alert('Passwords do not match');
       return;
     }
-    alert('Member registration is handled on the API (POST /users/). Use invite codes from Organization for now.');
+    alert('To add a member, share an invite code from the Organization page. New accounts are registered through the mobile app.');
     this.closeModal();
   }
 
@@ -144,6 +143,7 @@ export class FarmersComponent implements OnInit {
       void firstValueFrom(this.api.removeGroupMember(gid, farmer.id))
         .then(() => {
           this.farmers = this.farmers.filter((f) => f.id !== farmer.id);
+          this.cdr.markForCheck();
         })
         .catch(() => alert('Could not remove member.'));
     }

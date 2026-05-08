@@ -1,46 +1,74 @@
 <div class="device-content">
   <div class="header-section">
-    <h3>Devices</h3>
-    <h1>Device List</h1>
+    <div class="header-top">
+      <div>
+        <h3>Devices</h3>
+        <h1>Device List</h1>
+      </div>
+      <button class="register-btn" (click)="openRegisterModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Register Device
+      </button>
+    </div>
   </div>
 
   <div class="body-container">
     <p *ngIf="loadError" class="device-hint">{{ loadError }}</p>
+
     <div class="search-box">
-      <input type="text" [(ngModel)]="searchTerm" placeholder="Search Device Name" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="#627D5D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Search by name or type…" />
     </div>
 
-    <div class="table-container">
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoading" class="device-loading">
+      <div class="device-loading__spinner"></div>
+      <span>Loading devices…</span>
+    </div>
+
+    <div class="table-container" *ngIf="!isLoading">
       <table>
         <thead>
           <tr>
             <th>Device Name</th>
+            <th>Type</th>
             <th>Status</th>
-            <th>Last Time Activated</th>
+            <th>Last Activated</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
+          <tr *ngIf="filteredDevices().length === 0">
+            <td colspan="5" class="empty-row">No devices found.</td>
+          </tr>
           <tr *ngFor="let device of filteredDevices()">
             <td data-label="Device Name">
-              <a href="javascript:void(0)" (click)="goToDevice(device.id)">
-                {{ device.name }}
-              </a>
+              <a href="javascript:void(0)" (click)="goToDevice(device.id)">{{ device.name }}</a>
+            </td>
+            <td data-label="Type">
+              <span class="type-badge" [ngClass]="device.type.toLowerCase()">{{ device.type }}</span>
             </td>
             <td data-label="Status">
               <span class="status" [ngClass]="device.status.toLowerCase()"></span>
               {{ device.status }}
             </td>
-            <td data-label="Last Time Activated">{{ device.lastActivated }}</td>
+            <td data-label="Last Activated">{{ device.lastActivated }}</td>
             <td data-label="Actions">
-              <button class="edit-btn" (click)="editDevice(device)">
+              <button class="edit-btn" (click)="editDevice(device)" title="View / Edit">
                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="24" viewBox="0 0 25 24" fill="none">
                   <path d="M22.2312 2.26884C21.206 1.24372 19.544 1.24372 18.5188 2.26884L17.3617 3.42599L21.074 7.1383L22.2312 5.98116C23.2563 4.95603 23.2563 3.29397 22.2312 2.26884Z" fill="#37612F"/>
                   <path d="M20.0133 8.19896L16.301 4.48665L7.90019 12.8875C7.28341 13.5043 6.83002 14.265 6.581 15.101L5.78122 17.7859C5.7026 18.0498 5.77494 18.3356 5.96967 18.5303C6.1644 18.725 6.45019 18.7974 6.71412 18.7188L9.39901 17.919C10.235 17.67 10.9957 17.2166 11.6125 16.5998L20.0133 8.19896Z" fill="#37612F"/>
                   <path d="M5.75 5.24999C4.09315 5.24999 2.75 6.59314 2.75 8.24999V18.75C2.75 20.4068 4.09315 21.75 5.75 21.75H16.25C17.9069 21.75 19.25 20.4068 19.25 18.75V13.5C19.25 13.0858 18.9142 12.75 18.5 12.75C18.0858 12.75 17.75 13.0858 17.75 13.5V18.75C17.75 19.5784 17.0784 20.25 16.25 20.25H5.75C4.92157 20.25 4.25 19.5784 4.25 18.75V8.24999C4.25 7.42156 4.92157 6.74999 5.75 6.74999H11C11.4142 6.74999 11.75 6.41421 11.75 5.99999C11.75 5.58578 11.4142 5.24999 11 5.24999H5.75Z" fill="#37612F"/>
                 </svg>
               </button>
-              <button class="delete-btn" (click)="deleteDevice(device)">
+              <button class="delete-btn" (click)="deleteDevice(device)" title="Remove">
                 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="24" viewBox="0 0 25 24" fill="none">
                   <path fill-rule="evenodd" clip-rule="evenodd" d="M17.0001 4.47819V4.70498C17.9548 4.79237 18.9017 4.90731 19.8398 5.04898C20.1871 5.10143 20.5332 5.15755 20.8781 5.2173C21.2863 5.28799 21.5598 5.67617 21.4891 6.0843C21.4184 6.49244 21.0302 6.76598 20.6221 6.69529C20.5525 6.68323 20.4829 6.67132 20.4131 6.65957L19.4077 19.7301C19.2875 21.2931 17.9842 22.5 16.4166 22.5H8.58369C7.01608 22.5 5.71276 21.2931 5.59253 19.7301L4.5871 6.65957C4.5174 6.67132 4.44774 6.68323 4.37813 6.69529C3.97 6.76598 3.58183 6.49244 3.51113 6.0843C3.44043 5.67617 3.71398 5.28799 4.12211 5.2173C4.46701 5.15755 4.81315 5.10143 5.16048 5.04898C6.09858 4.90731 7.0454 4.79237 8.00012 4.70498V4.47819C8.00012 2.91371 9.21265 1.57818 10.8156 1.52691C11.3749 1.50901 11.9365 1.5 12.5001 1.5C13.0638 1.5 13.6253 1.50901 14.1847 1.52691C15.7876 1.57818 17.0001 2.91371 17.0001 4.47819ZM10.8635 3.02614C11.4069 3.00876 11.9525 3 12.5001 3C13.0478 3 13.5934 3.00876 14.1367 3.02614C14.8913 3.05028 15.5001 3.68393 15.5001 4.47819V4.59082C14.5078 4.53056 13.5075 4.5 12.5001 4.5C11.4928 4.5 10.4925 4.53056 9.50012 4.59082V4.47819C9.50012 3.68393 10.1089 3.05028 10.8635 3.02614ZM10.5087 8.97118C10.4928 8.55727 10.1444 8.23463 9.73045 8.25055C9.31654 8.26647 8.99391 8.61492 9.00983 9.02882L9.35599 18.0288C9.3719 18.4427 9.72035 18.7654 10.1343 18.7494C10.5482 18.7335 10.8708 18.3851 10.8549 17.9712L10.5087 8.97118ZM15.9895 9.02882C16.0054 8.61492 15.6828 8.26647 15.2689 8.25055C14.855 8.23463 14.5065 8.55727 14.4906 8.97118L14.1444 17.9712C14.1285 18.3851 14.4512 18.7335 14.8651 18.7494C15.279 18.7654 15.6274 18.4427 15.6433 18.0288L15.9895 9.02882Z" fill="#B81010"/>
                 </svg>
@@ -52,3 +80,166 @@
     </div>
   </div>
 </div>
+
+<!-- ── Register Device Modal ──────────────────────────────────────────── -->
+<app-modal [isOpen]="reg.isOpen" [title]="reg.step === 'success' ? 'Device Registered!' : 'Register Device'" (close)="closeRegisterModal()">
+
+  <!-- Step 1: Choose type -->
+  <div *ngIf="reg.step === 'choose'" class="reg-choose">
+    <p class="reg-intro">What kind of device are you provisioning?</p>
+    <div class="reg-type-grid">
+      <button class="reg-type-card" (click)="selectRegisterType('hub')">
+        <div class="reg-type-icon reg-type-icon--hub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="4" y="6" width="16" height="12" rx="2"/>
+            <path d="M8 10h8M8 14h5" stroke-linecap="round"/>
+            <circle cx="17" cy="9" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <span class="reg-type-title">Central Hub</span>
+        <span class="reg-type-sub">Raspberry Pi · manages field nodes</span>
+      </button>
+      <button class="reg-type-card" (click)="selectRegisterType('node')">
+        <div class="reg-type-icon reg-type-icon--node">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="7" y="7" width="10" height="10" rx="1.5"/>
+            <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="reg-type-title">Field Node</span>
+        <span class="reg-type-sub">ESP32 · pest deterrence unit</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2a: Hub form -->
+  <div *ngIf="reg.step === 'hub'" class="reg-form">
+    <button class="reg-back-btn" type="button" (click)="backToChoose()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </button>
+    <h3 class="reg-form-title">Central Hub details</h3>
+
+    <div class="form-group">
+      <label class="form-label" for="hub-name">Hub name <span class="req">*</span></label>
+      <input id="hub-name" type="text" class="input-field" [(ngModel)]="reg.hubForm.name"
+        placeholder="e.g. North Field Hub" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="hub-lat">Latitude <span class="req">*</span></label>
+        <input id="hub-lat" type="number" class="input-field" [(ngModel)]="reg.hubForm.location_lat"
+          placeholder="e.g. 14.5995" step="any" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="hub-lng">Longitude <span class="req">*</span></label>
+        <input id="hub-lng" type="number" class="input-field" [(ngModel)]="reg.hubForm.location_lng"
+          placeholder="e.g. 120.9842" step="any" />
+      </div>
+    </div>
+
+    <p *ngIf="reg.saveError" class="reg-error">{{ reg.saveError }}</p>
+
+    <div class="form-footer">
+      <button type="button" class="save-btn" (click)="submitRegister()" [disabled]="reg.isSaving">
+        {{ reg.isSaving ? 'Registering…' : 'Register Hub' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2b: Node form -->
+  <div *ngIf="reg.step === 'node'" class="reg-form">
+    <button class="reg-back-btn" type="button" (click)="backToChoose()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </button>
+    <h3 class="reg-form-title">Field Node details</h3>
+
+    <div class="form-group">
+      <label class="form-label" for="node-hub">Parent hub <span class="req">*</span></label>
+      <select id="node-hub" class="input-field" [(ngModel)]="reg.nodeForm.hub_id">
+        <option value="" disabled>Select a hub…</option>
+        <option *ngFor="let hub of availableHubs" [value]="hub.id">{{ hub.name }}</option>
+      </select>
+      <p *ngIf="availableHubs.length === 0" class="reg-hint">No central hubs found. Register a hub first.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="node-label">Node label <span class="req">*</span></label>
+      <input id="node-label" type="text" class="input-field" [(ngModel)]="reg.nodeForm.label"
+        placeholder="e.g. Corn Corner A" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="node-type">Node type</label>
+      <select id="node-type" class="input-field" [(ngModel)]="reg.nodeForm.node_type">
+        <option value="deterrence_v1">deterrence_v1</option>
+        <option value="deterrence_v2">deterrence_v2</option>
+        <option value="sensor_v1">sensor_v1</option>
+      </select>
+    </div>
+
+    <p *ngIf="reg.saveError" class="reg-error">{{ reg.saveError }}</p>
+
+    <div class="form-footer">
+      <button type="button" class="save-btn" (click)="submitRegister()"
+        [disabled]="reg.isSaving || availableHubs.length === 0">
+        {{ reg.isSaving ? 'Registering…' : 'Register Node' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Success + credentials -->
+  <div *ngIf="reg.step === 'success'" class="reg-success">
+    <div class="reg-success__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Hub result -->
+    <ng-container *ngIf="isHubResult(reg.result)">
+      <p class="reg-success__msg">Central hub registered successfully. Copy the credentials below — the secret is shown only once.</p>
+      <div class="reg-cred">
+        <div class="reg-cred__row">
+          <span class="reg-cred__label">Hub ID</span>
+          <code class="reg-cred__value">{{ reg.result.hub_id }}</code>
+        </div>
+        <div class="reg-cred__row">
+          <span class="reg-cred__label">Secret</span>
+          <code class="reg-cred__value reg-cred__value--secret">{{ reg.result.secret }}</code>
+        </div>
+        <div class="reg-cred__row">
+          <span class="reg-cred__label">Status</span>
+          <code class="reg-cred__value">{{ reg.result.status }}</code>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Node result -->
+    <ng-container *ngIf="isNodeResult(reg.result)">
+      <p class="reg-success__msg">Field node registered successfully. Copy the credentials below — the secret is shown only once.</p>
+      <div class="reg-cred">
+        <div class="reg-cred__row">
+          <span class="reg-cred__label">Node ID</span>
+          <code class="reg-cred__value">{{ reg.result.node_id }}</code>
+        </div>
+        <div class="reg-cred__row">
+          <span class="reg-cred__label">Node Secret</span>
+          <code class="reg-cred__value reg-cred__value--secret">{{ reg.result.node_secret }}</code>
+        </div>
+        <div class="reg-cred__row">
+          <span class="reg-cred__label">Parent Hub</span>
+          <code class="reg-cred__value">{{ reg.result.hub_filter }}</code>
+        </div>
+        <div class="reg-cred__row">
+          <span class="reg-cred__label">Status</span>
+          <code class="reg-cred__value">{{ reg.result.status }}</code>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="form-footer">
+      <button type="button" class="save-btn" (click)="closeRegisterModal()">Done</button>
+    </div>
+  </div>
+
+</app-modal>

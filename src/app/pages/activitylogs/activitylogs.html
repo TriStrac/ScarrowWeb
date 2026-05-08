@@ -3,11 +3,7 @@
     <p class="page-kicker">Member workspace</p>
     <h1 class="page-title">Activity logs</h1>
     <p class="page-lead al-lead">
-      Full history for <strong class="al-lead__name">{{ memberName() }}</strong>
-      @if (farmLabel(); as farm) {
-        <span class="al-lead__farm"> · {{ farm }}</span>
-      }
-      . Search by action or date.
+      Full history for <strong class="al-lead__name">{{ memberName() }}</strong>. Search by action or date.
     </p>
     @if (farmerId()) {
       <p class="al-back">
@@ -16,7 +12,18 @@
     }
   </header>
 
-  <div class="al-toolbar">
+  @if (isLoading()) {
+    <div class="al-empty" role="status">
+      <p class="al-empty__title">Loading activity logs…</p>
+    </div>
+  }
+  @if (!isLoading() && loadError()) {
+    <div class="al-empty" role="alert">
+      <p class="al-empty__title">{{ loadError() }}</p>
+    </div>
+  }
+
+  <div class="al-toolbar" [style.display]="isLoading() ? 'none' : ''">
     <label class="al-search">
       <span class="al-search__icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -36,12 +43,12 @@
     </label>
   </div>
 
-  @if (filteredLogs().length === 0) {
+  @if (!isLoading() && !loadError() && filteredLogs().length === 0) {
     <div class="al-empty" role="status">
       <p class="al-empty__title">No matching entries</p>
       <p class="al-empty__hint">Try another name, action keyword, or date.</p>
     </div>
-  } @else {
+  } @else if (!isLoading() && !loadError()) {
     <div class="al-feed">
       @for (group of filteredLogs() | groupByDate; track group.date) {
         <section class="al-day" [attr.aria-label]="'Activity on ' + group.date">

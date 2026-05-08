@@ -25,10 +25,18 @@
     <p class="org-page-intro__lead">Members, roles, and access for your Scarrow workspace.</p>
   </header>
 
-  @if (loadError) {
-    <p class="org-page-intro__lead" role="alert" style="margin: 0 1rem 1rem">{{ loadError }}</p>
+  @if (isLoading) {
+    <div class="org-loading" role="status">
+      <div class="org-loading__spinner" aria-hidden="true"></div>
+      <p class="org-loading__text">Loading organization…</p>
+    </div>
   }
 
+  @if (!isLoading && loadError) {
+    <p class="org-page-intro__lead" role="alert" style="margin: 0 1rem 1rem; color: #b91c1c">{{ loadError }}</p>
+  }
+
+  @if (!isLoading) {
   <div class="org-layout">
     <section class="org-info-card" aria-label="Organization details">
       <div class="org-info-card__text">
@@ -124,9 +132,31 @@
             </button>
           </li>
         }
+        @if (members.length === 0 && !loadError) {
+          <p class="org-empty-hint">No members found.</p>
+        }
       </ul>
     </section>
   </div>
+
+  @if (isOrgAdmin) {
+    <div class="org-danger-zone">
+      <h3 class="org-danger-zone__title">Danger zone</h3>
+      <p class="org-danger-zone__desc">
+        Disbanding permanently deletes this organization and removes all members. This cannot be undone.
+      </p>
+      <button type="button" class="org-danger-zone__btn" (click)="disbandOrganization()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6M14 11v6" />
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+        </svg>
+        Disband organization
+      </button>
+    </div>
+  }
+}
 </div>
 
 @if (selectedMember; as member) {

@@ -4,11 +4,20 @@ import { Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { NotificationService, JoinRequest } from '../../services/notification.service';
-import { OrgMember } from '../../data/demo-org-members';
 import { AuthService } from '../../services/auth.service';
 import { ScarrowApiService } from '../../services/scarrow-api.service';
 
-export type { OrgMember } from '../../data/demo-org-members';
+export interface OrgMember {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  phone: string;
+  address: string;
+  role: string;
+  roleBadge: string;
+  registeredDeviceCount: number;
+}
 
 @Component({
   selector: 'app-organization',
@@ -27,11 +36,13 @@ export class OrganizationComponent implements OnInit {
   /** Pending users who asked to join (shown to org admins). */
   readonly joinRequests = toSignal(this.notifications.joinRequests, { initialValue: [] as JoinRequest[] });
 
-  organizationName = 'Scarrow Demo Farm';
+  organizationName = '';
 
   currentUserId = '';
 
   isOrgAdmin = false;
+
+  isLoading = true;
 
   members: OrgMember[] = [];
 
@@ -44,12 +55,12 @@ export class OrganizationComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.currentUserId = this.auth.userId ?? '';
     this.isOrgAdmin = (this.auth.role ?? '').toUpperCase() === 'HEAD';
-    if (this.auth.groupName) {
-      this.organizationName = this.auth.groupName;
-    }
+    this.organizationName = this.auth.groupName ?? 'My Organization';
+    this.isLoading = true;
     const gid = this.auth.groupId;
     if (!gid) {
       this.loadError = 'No organization in session. Sign in again after your account is assigned to a group.';
+      this.isLoading = false;
       return;
     }
     try {
@@ -60,11 +71,11 @@ export class OrganizationComponent implements OnInit {
     }
     try {
       const rows = await firstValueFrom(this.api.getGroupMembers(gid));
-      if (rows.length) {
-        this.members = rows.map((m) => this.toOrgMember(m));
-      }
+      this.members = rows.map((m) => this.toOrgMember(m));
     } catch {
       this.loadError = 'Could not load members from the server.';
+    } finally {
+      this.isLoading = false;
     }
   }
 
@@ -178,6 +189,24 @@ export class OrganizationComponent implements OnInit {
     if (d === 1) return 'Yesterday';
     if (d < 7) return `${d} days ago`;
     return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  /** DELETE /api/groups/:groupId — HEAD farmer only */
+  async disbandOrganization(): Promise<void> {
+    if (!this.isOrgAdmin) return;
+    const gid = this.auth.groupId;
+    if (!gid) return;
+    const confirmed = confirm(
+      `Are you sure you want to disband "${this.organizationName}"?\n\nThis will permanently delete the organization and remove all members. This action cannot be undone.`,
+    );
+    if (!confirmed) return;
+    try {
+      await firstValueFrom(this.api.disbandGroup(gid));
+      this.auth.clearSession();
+      void this.router.navigate(['/login']);
+    } catch {
+      alert('Could not disband the organization. Please try again.');
+    }
   }
 
   private toOrgMember(m: { user_id: string; display_name: string; role: string }): OrgMember {

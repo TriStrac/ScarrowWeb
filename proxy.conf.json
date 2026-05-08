@@ -1,0 +1,11 @@
+{
+  "/api": {
+    "target": "https://scarrow-api.striel.xyz",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": "/api"
+    },
+    "logLevel": "debug"
+  }
+}

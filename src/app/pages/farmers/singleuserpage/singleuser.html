@@ -1,4 +1,21 @@
-@if (profile; as p) {
+<!-- Loading -->
+@if (isLoading) {
+  <div class="su-loading">
+    <div class="su-loading__spinner" aria-label="Loading member..."></div>
+    <p class="su-loading__text">Loading member…</p>
+  </div>
+}
+
+<!-- Error / not found -->
+@if (!isLoading && loadError) {
+  <div class="su-loading">
+    <p class="su-loading__text">{{ loadError }}</p>
+    <button type="button" class="farmer-back" style="margin-top:1rem" (click)="goBack()">Go back</button>
+  </div>
+}
+
+<!-- Member page -->
+@if (!isLoading && !loadError) {
   <div class="farmer-page">
     <header class="farmer-hero">
       <button type="button" class="farmer-back" (click)="goBack()" aria-label="Back to dashboard">
@@ -7,349 +24,251 @@
         </svg>
       </button>
       <div class="farmer-hero__text">
-        <h1 class="farmer-hero__name">{{ p.name }}</h1>
-        <p class="farmer-hero__meta">{{ p.farmName }} · {{ p.role }}</p>
+        <h1 class="farmer-hero__name">{{ displayName }}</h1>
+        <p class="farmer-hero__meta">{{ role }}</p>
       </div>
     </header>
 
     <div class="farmer-tabs" role="tablist" aria-label="Member sections">
-      <button
-        type="button"
-        role="tab"
-        class="farmer-tab"
+      <button type="button" role="tab" class="farmer-tab"
         [class.farmer-tab--active]="activeTab === 'devices'"
         [attr.aria-selected]="activeTab === 'devices'"
-        (click)="setTab('devices')"
-      >
-        Devices
-      </button>
-      <button
-        type="button"
-        role="tab"
-        class="farmer-tab"
+        (click)="setTab('devices')">Devices</button>
+      <button type="button" role="tab" class="farmer-tab"
         [class.farmer-tab--active]="activeTab === 'reports'"
         [attr.aria-selected]="activeTab === 'reports'"
-        (click)="setTab('reports')"
-      >
-        Reports
-      </button>
-      <button
-        type="button"
-        role="tab"
-        class="farmer-tab"
+        (click)="setTab('reports')">Reports</button>
+      <button type="button" role="tab" class="farmer-tab"
         [class.farmer-tab--active]="activeTab === 'activity'"
         [attr.aria-selected]="activeTab === 'activity'"
-        (click)="setTab('activity')"
-      >
-        Activity Logs
-      </button>
+        (click)="setTab('activity')">Activity Logs</button>
     </div>
 
+    <!-- ── Devices tab ───────────────────────────────────────────────────── -->
     @if (activeTab === 'devices') {
       <section class="farmer-panel" aria-label="Devices">
-        <div class="farmer-stats">
-          <div class="farmer-stat">
-            <span class="farmer-stat__label">Total</span>
-            <span class="farmer-stat__value">{{ totalDevices }}</span>
-          </div>
-          <div class="farmer-stat">
-            <span class="farmer-stat__label">Online</span>
-            <span class="farmer-stat__value farmer-stat__value--ok">{{ onlineCount }}</span>
-          </div>
-          <div class="farmer-stat">
-            <span class="farmer-stat__label">Offline</span>
-            <span class="farmer-stat__value farmer-stat__value--bad">{{ offlineCount }}</span>
-          </div>
-        </div>
 
-        <h2 class="farmer-section-title">My devices ({{ totalDevices }})</h2>
-
-        @if (p.devices.length === 0) {
-          <p class="farmer-empty">No devices registered for this member yet.</p>
+        @if (devicesLoading) {
+          <p class="su-loading__text" style="padding:2rem 0">Loading devices…</p>
+        } @else if (devicesError) {
+          <p class="su-loading__text" style="color:#b91c1c;padding:1rem 0">{{ devicesError }}</p>
         } @else {
-          <ul class="farmer-device-list" role="list">
-            @for (d of p.devices; track d.id) {
-              <li>
-                <article class="device-card device-card--tappable" (click)="openLinkedNodes(d)">
-                  <div class="device-card__top">
-                    <div class="device-card__status">
-                      <span class="device-card__dot" [class.device-card__dot--off]="!d.online" aria-hidden="true"></span>
-                      <span>{{ d.status }}</span>
-                    </div>
-                    <span class="device-card__battery" aria-hidden="true" title="Battery OK">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <rect x="2" y="7" width="18" height="10" rx="2" />
-                        <path d="M22 11v2" stroke-linecap="round" />
-                        <path d="M6 11h8" stroke-linecap="round" />
-                      </svg>
-                    </span>
-                  </div>
-                  <p class="device-card__hub">{{ d.centralName }}</p>
-                  <div class="device-card__rows">
-                    <div class="device-card__row">
-                      <span class="device-card__icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                          <path d="M5 12.55a11 11 0 0 1 14.08 0" stroke-linecap="round" />
-                          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" stroke-linecap="round" />
-                          <path d="M12 20h.01" stroke-linecap="round" />
-                        </svg>
-                      </span>
-                      <span class="device-card__row-text">{{ d.frequencyHz }} Hz</span>
-                    </div>
-                    <div class="device-card__row">
-                      <span class="device-card__icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                          <circle cx="12" cy="12" r="9" />
-                          <path d="M12 7v5l3 2" stroke-linecap="round" />
-                        </svg>
-                      </span>
-                      <span class="device-card__row-text">Last time triggered: {{ d.lastTriggered }}</span>
-                    </div>
-                    <div class="device-card__row">
-                      <span class="device-card__icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                          <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z" stroke-linecap="round" />
-                          <circle cx="12" cy="10" r="2.5" />
-                        </svg>
-                      </span>
-                      <span class="device-card__row-text">{{ d.location }}</span>
-                    </div>
-                  </div>
-                  <div class="device-card__actions" (click)="$event.stopPropagation()">
-                    <button type="button" class="device-card__btn device-card__btn--edit" (click)="editDevice(d, $event)" aria-label="Edit device">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                    <button type="button" class="device-card__btn device-card__btn--delete" (click)="deleteDevice(d, $event)" aria-label="Delete device">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" stroke-linecap="round" />
-                        <path d="M10 11v6M14 11v6" stroke-linecap="round" />
-                      </svg>
-                    </button>
-                  </div>
-                </article>
-              </li>
-            }
-          </ul>
-        }
-      </section>
-    }
-
-    @if (activeTab === 'reports') {
-      <section class="farmer-panel farmer-reports" aria-label="Reports">
-        <div class="fr-filters">
-          <div class="fr-filters__head">
-            <label class="fr-label" for="fr-device-select">Central hub</label>
-            <span class="fr-hint">
-              Charts and totals use deterrence events from <strong>node devices</strong> paired to the selected hub(s).
-            </span>
-          </div>
-          <div class="fr-select-wrap">
-            <select
-              id="fr-device-select"
-              class="fr-select"
-              name="reportDeviceSelect"
-              [(ngModel)]="reportDeviceSelect"
-              (change)="onReportDeviceSelectChange()"
-            >
-              @if (p.devices.length === 0) {
-                <option value="">No devices</option>
-              }
-              @for (d of p.devices; track d.id) {
-                <option [value]="d.id">{{ d.centralName }}</option>
-              }
-            </select>
-          </div>
-          @if (selectedReportDevices.length) {
-            <div class="fr-chips" aria-label="Selected devices">
-              @for (name of selectedReportDevices; track name) {
-                <span class="fr-chip">
-                  <span class="fr-chip__text">{{ name }}</span>
-                  <button
-                    type="button"
-                    class="fr-chip__x"
-                    (click)="removeReportDeviceChip(name)"
-                    [attr.aria-label]="'Remove ' + name"
-                  >
-                    ×
-                  </button>
-                </span>
-              }
+          <div class="farmer-stats">
+            <div class="farmer-stat">
+              <span class="farmer-stat__label">Total</span>
+              <span class="farmer-stat__value">{{ totalDevices }}</span>
             </div>
-          }
-        </div>
-
-        <div class="fr-stats" role="group" aria-label="Report status overview">
-          <div class="fr-stat">
-            <span class="fr-stat__dot fr-stat__dot--ok" aria-hidden="true"></span>
-            <span class="fr-stat__label">Active</span>
-            <span class="fr-stat__val fr-stat__val--ok">{{ reportStats.active }}</span>
-          </div>
-          <div class="fr-stat">
-            <span class="fr-stat__dot fr-stat__dot--err" aria-hidden="true"></span>
-            <span class="fr-stat__label">Error</span>
-            <span class="fr-stat__val fr-stat__val--err">{{ reportStats.error }}</span>
-          </div>
-          <div class="fr-stat">
-            <span class="fr-stat__dot fr-stat__dot--muted" aria-hidden="true"></span>
-            <span class="fr-stat__label">Inactive</span>
-            <span class="fr-stat__val fr-stat__val--muted">{{ reportStats.inactive }}</span>
-          </div>
-        </div>
-
-        <div class="fr-period">
-          <h3 class="fr-subtitle">Reporting period</h3>
-          <p class="fr-lead">Choose a month range; charts use node deterrence events (birds / rodents).</p>
-          <div class="fr-month-row">
-            <label class="fr-month">
-              <span class="fr-month__label">From month</span>
-              <span class="fr-month__field">
-                <svg class="fr-month__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" />
-                </svg>
-                <input
-                  class="fr-month__input"
-                  type="month"
-                  [(ngModel)]="reportFromMonth"
-                  name="reportFrom"
-                  [attr.max]="reportToMonth || null"
-                  (ngModelChange)="onReportMonthChange()"
-                />
-              </span>
-            </label>
-            <label class="fr-month">
-              <span class="fr-month__label">To month</span>
-              <span class="fr-month__field">
-                <svg class="fr-month__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" />
-                </svg>
-                <input
-                  class="fr-month__input"
-                  type="month"
-                  [(ngModel)]="reportToMonth"
-                  name="reportTo"
-                  [attr.min]="reportFromMonth || null"
-                  (ngModelChange)="onReportMonthChange()"
-                />
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div class="fr-chart-card">
-          <div class="fr-chart-head">
-            <div>
-              <h3 class="fr-subtitle fr-subtitle--tight">Device Summary Analysis</h3>
-              <p class="fr-lead fr-lead--tight">{{ reportPeriodSummary }}</p>
+            <div class="farmer-stat">
+              <span class="farmer-stat__label">Online</span>
+              <span class="farmer-stat__value farmer-stat__value--ok">{{ onlineCount }}</span>
             </div>
-            <div class="fr-pill-row" role="group" aria-label="Chart granularity">
-              <button
-                type="button"
-                class="fr-pill"
-                [class.fr-pill--active]="reportGranularity === 'monthly'"
-                (click)="setReportGranularity('monthly')"
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                class="fr-pill"
-                [class.fr-pill--active]="reportGranularity === 'weekly'"
-                (click)="setReportGranularity('weekly')"
-              >
-                Weekly
-              </button>
+            <div class="farmer-stat">
+              <span class="farmer-stat__label">Offline</span>
+              <span class="farmer-stat__value farmer-stat__value--bad">{{ offlineCount }}</span>
             </div>
           </div>
-          <div class="fr-chart-canvas">
-            <app-farmer-report-chart
-              [labels]="reportChartLabels"
-              [values]="reportChartValues"
-              [datasetLabel]="reportChartDatasetLabel"
-              [xAxisTitle]="reportChartXTitle"
-            />
-          </div>
-        </div>
 
-        <div class="fr-bottom">
-          <div class="fr-top-devices">
-            <h3 class="fr-subtitle">Top nodes by triggers</h3>
-            <ul class="fr-device-list" role="list">
-              @for (n of reportTopDevices; track n) {
-                <li class="fr-device-list__item">
-                  <span class="fr-device-list__text" [attr.title]="n">{{ n }}</span>
+          <h2 class="farmer-section-title">Devices ({{ totalDevices }})</h2>
+
+          @if (devices.length === 0) {
+            <p class="farmer-empty">No devices registered for this member yet.</p>
+          } @else {
+            <ul class="farmer-device-list" role="list">
+              @for (d of devices; track d.id) {
+                <li>
+                  <article class="device-card"
+                    [class.device-card--tappable]="isCentral(d)"
+                    (click)="isCentral(d) && openLinkedNodes(d)">
+                    <div class="device-card__top">
+                      <div class="device-card__status">
+                        <span class="device-card__dot" [class.device-card__dot--off]="!isOnline(d)" aria-hidden="true"></span>
+                        <span>{{ isOnline(d) ? 'Online' : 'Offline' }}</span>
+                      </div>
+                      <span class="device-type-badge" [class.device-type-badge--central]="isCentral(d)">
+                        {{ isCentral(d) ? 'HUB' : 'NODE' }}
+                      </span>
+                    </div>
+                    <p class="device-card__hub">{{ deviceDisplayName(d) }}</p>
+                    <div class="device-card__rows">
+                      <div class="device-card__row">
+                        <span class="device-card__icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                            <path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" />
+                          </svg>
+                        </span>
+                        <span class="device-card__row-text">
+                          {{ d.last_activated_at ? (d.last_activated_at | date:'short') : 'N/A' }}
+                        </span>
+                      </div>
+                      <div class="device-card__row">
+                        <span class="device-card__icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
+                            <path d="M12 6v6l4 2" stroke-linecap="round" />
+                          </svg>
+                        </span>
+                        <span class="device-card__row-text">{{ d.id | slice:0:8 }}…</span>
+                      </div>
+                    </div>
+                    <div class="device-card__actions" (click)="$event.stopPropagation()">
+                      <button type="button" class="device-card__action" (click)="editDevice(d, $event)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        View
+                      </button>
+                    </div>
+                  </article>
                 </li>
               }
             </ul>
-          </div>
-          <div class="fr-totals">
-            <div class="fr-total fr-total--blue">
-              <span class="fr-total__label">Total triggered times</span>
-              <span class="fr-total__value">{{ reportTotalTriggered }}</span>
-            </div>
-            <div class="fr-total fr-total--green">
-              <span class="fr-total__label">Total active time</span>
-              <span class="fr-total__value">{{ reportTotalActiveMins }} mins</span>
-            </div>
-          </div>
-        </div>
+          }
+        }
       </section>
     }
 
+    <!-- ── Reports tab ───────────────────────────────────────────────────── -->
+    @if (activeTab === 'reports') {
+      <section class="farmer-panel" aria-label="Reports">
+
+        @if (availableHubs.length === 0 && !devicesLoading) {
+          <p class="farmer-empty">No central hubs found for this member. Reports require at least one hub device.</p>
+        } @else {
+          <!-- Hub selector -->
+          <div class="fr-hub-row">
+            <label class="fr-label" for="hub-select">Hub</label>
+            <select id="hub-select" class="fr-select" [(ngModel)]="reportHubId" (ngModelChange)="onHubChange()" name="hubSelect">
+              @for (h of availableHubs; track h.id) {
+                <option [value]="h.id">{{ deviceDisplayName(h) }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Period -->
+          <div class="fr-period">
+            <h3 class="fr-subtitle">Reporting period</h3>
+            <div class="fr-month-row">
+              <label class="fr-month">
+                <span class="fr-month__label">From month</span>
+                <span class="fr-month__field">
+                  <input class="fr-month__input" type="month" [(ngModel)]="reportFromMonth" name="reportFrom"
+                    [attr.max]="reportToMonth || null" (ngModelChange)="onReportMonthChange()" />
+                </span>
+              </label>
+              <label class="fr-month">
+                <span class="fr-month__label">To month</span>
+                <span class="fr-month__field">
+                  <input class="fr-month__input" type="month" [(ngModel)]="reportToMonth" name="reportTo"
+                    [attr.min]="reportFromMonth || null" (ngModelChange)="onReportMonthChange()" />
+                </span>
+              </label>
+            </div>
+          </div>
+
+          @if (reportLoading) {
+            <p class="su-loading__text" style="padding:1.5rem 0">Loading report…</p>
+          } @else if (reportError) {
+            <p class="su-loading__text" style="color:#b91c1c;padding:1rem 0">{{ reportError }}</p>
+          } @else {
+            <div class="fr-chart-card">
+              <div class="fr-chart-head">
+                <div>
+                  <h3 class="fr-subtitle fr-subtitle--tight">Deterrence Events</h3>
+                  <p class="fr-lead fr-lead--tight">{{ reportChartDatasetLabel }}</p>
+                </div>
+              </div>
+
+              @if (reportChartLabels.length === 0) {
+                <p class="farmer-empty" style="padding:.75rem 0">No trend data available for this period.</p>
+              } @else {
+                <div class="fr-chart-canvas">
+                  <app-farmer-report-chart
+                    [labels]="reportChartLabels"
+                    [values]="reportChartValues"
+                    [datasetLabel]="reportChartDatasetLabel"
+                    [xAxisTitle]="reportChartXTitle"
+                  />
+                </div>
+              }
+            </div>
+
+            <div class="fr-bottom">
+              <div class="fr-top-devices">
+                <h3 class="fr-subtitle">Pest distribution</h3>
+                <ul class="fr-device-list" role="list">
+                  @if (reportPestDist.length === 0) {
+                    <li class="fr-device-list__item">No data</li>
+                  }
+                  @for (p of reportPestDist; track p.pest) {
+                    <li class="fr-device-list__item">
+                      <span class="fr-device-list__text">{{ p.pest }}</span>
+                      <span class="fr-device-list__count">{{ p.count }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+              <div class="fr-totals">
+                <div class="fr-total fr-total--blue">
+                  <span class="fr-total__label">Total events</span>
+                  <span class="fr-total__value">{{ reportTotalEvents }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </section>
+    }
+
+    <!-- ── Activity tab ──────────────────────────────────────────────────── -->
     @if (activeTab === 'activity') {
       <section class="farmer-panel farmer-activity" aria-label="Activity logs">
-        @for (group of activityGroups; track group.label) {
-          <h3 class="fa-group-label">{{ group.label }}</h3>
-          <ul class="fa-list" role="list">
-            @for (e of group.entries; track $index) {
-              <li>
-                <article class="fa-card">
-                  <div class="fa-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <rect x="7" y="7" width="10" height="10" rx="1.5" />
-                      <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round" />
-                    </svg>
-                  </div>
-                  <div class="fa-body">
-                    <span class="fa-name">{{ e.userName }}</span>
-                    <span class="fa-action">
-                      <span class="fa-k">Action:</span>
-                      <span class="fa-action__text">{{ e.action }}</span>
-                    </span>
-                    <span class="fa-when">
-                      <span class="fa-k">When:</span>
-                      {{ e.when }}
-                    </span>
-                  </div>
-                </article>
-              </li>
-            }
-          </ul>
+
+        @if (activityLoading) {
+          <p class="su-loading__text" style="padding:2rem 0">Loading activity…</p>
+        } @else if (activityError) {
+          <p class="su-loading__text" style="color:#b91c1c;padding:1rem 0">{{ activityError }}</p>
+        } @else if (activityGroups.length === 0) {
+          <p class="farmer-empty">No activity logs found for this member.</p>
+        } @else {
+          @for (group of activityGroups; track group.label) {
+            <h3 class="fa-group-label">{{ group.label }}</h3>
+            <ul class="fa-list" role="list">
+              @for (e of group.entries; track $index) {
+                <li>
+                  <article class="fa-card">
+                    <div class="fa-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="7" y="7" width="10" height="10" rx="1.5" />
+                        <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round" />
+                      </svg>
+                    </div>
+                    <div class="fa-body">
+                      <span class="fa-name">{{ e.actor }}</span>
+                      <span class="fa-action">
+                        <span class="fa-k">Action:</span>
+                        <span class="fa-action__text">{{ e.action }}</span>
+                      </span>
+                      <span class="fa-when">
+                        <span class="fa-k">When:</span>
+                        {{ e.when }}
+                      </span>
+                    </div>
+                  </article>
+                </li>
+              }
+            </ul>
+          }
         }
-        <p class="fa-footer-link">
-          <a [routerLink]="['/activitylogs', p.id]" class="fa-full-logs-cta">
-            <span>Open full activity logs</span>
-            <svg class="fa-full-logs-cta__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </a>
-        </p>
       </section>
     }
 
+    <!-- ── Linked-nodes drawer ──────────────────────────────────────────── -->
     @if (linkedNodesFor; as hub) {
       <div class="linked-nodes-backdrop" (click)="closeLinkedNodes()">
-        <div
-          class="linked-nodes"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="linked-nodes-title"
-          (click)="$event.stopPropagation()"
-        >
+        <div class="linked-nodes" role="dialog" aria-modal="true" aria-labelledby="linked-nodes-title"
+          (click)="$event.stopPropagation()">
           <div class="linked-nodes__header">
             <h2 id="linked-nodes-title" class="linked-nodes__title">Linked nodes</h2>
             <button type="button" class="linked-nodes__close" (click)="closeLinkedNodes()" aria-label="Close">
@@ -358,27 +277,12 @@
               </svg>
             </button>
           </div>
-          <p class="linked-nodes__hub-name">{{ hub.centralName }}</p>
+          <p class="linked-nodes__hub-name">{{ deviceDisplayName(hub) }}</p>
           <div class="linked-nodes__rule" role="presentation"></div>
-          <p class="linked-nodes__section-label">Pairing</p>
-
-          @if (hub.linkedNodeCount === 0) {
-            <div class="linked-nodes__empty">
-              <div class="linked-nodes__empty-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                  <rect x="7" y="7" width="10" height="10" rx="1.5" />
-                  <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M12 9h-2M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round" />
-                </svg>
-              </div>
-              <p class="linked-nodes__empty-title">No node devices yet.</p>
-              <p class="linked-nodes__empty-desc">
-                This central device doesn't have any paired nodes yet. Node pairing is managed from farmer accounts.
-              </p>
-            </div>
-          } @else {
-            <p class="linked-nodes__summary">{{ hub.linkedNodeCount }} node device(s) linked to this central.</p>
-          }
-
+          <p class="linked-nodes__section-label">Nodes paired to this hub</p>
+          <p class="linked-nodes__summary">
+            {{ nodeCount }} node device(s) in this member's network.
+          </p>
           <button type="button" class="linked-nodes__cta" (click)="viewAllLinkedNodes()">
             <span class="linked-nodes__cta-side" aria-hidden="true"></span>
             <span class="linked-nodes__cta-label">View all nodes</span>

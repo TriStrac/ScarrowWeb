@@ -292,12 +292,20 @@
           }
         </div>
         <div class="profile-account-modal__foot">
-          <button type="button" class="profile-account-modal__btn profile-account-modal__btn--ghost" (click)="closeAccountEditModal()">
-            Cancel
-          </button>
-          <button type="button" class="profile-account-modal__btn profile-account-modal__btn--primary" (click)="saveAccountEditModal()">
-            Save
-          </button>
+          @if (editModalError) {
+            <p class="profile-account-modal__msg profile-account-modal__msg--error">{{ editModalError }}</p>
+          }
+          @if (editModalSuccess) {
+            <p class="profile-account-modal__msg profile-account-modal__msg--success">{{ editModalSuccess }}</p>
+          }
+          <div class="profile-account-modal__btns">
+            <button type="button" class="profile-account-modal__btn profile-account-modal__btn--ghost" (click)="closeAccountEditModal()">
+              Cancel
+            </button>
+            <button type="button" class="profile-account-modal__btn profile-account-modal__btn--primary" (click)="saveAccountEditModal()" [disabled]="editModalSubmitting">
+              {{ editModalSubmitting ? 'Saving…' : 'Save' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -351,8 +359,11 @@
                 autocapitalize="characters"
               />
             </label>
-            <button type="button" class="profile-delete-modal__submit" (click)="submitDeleteAccount()">
-              Delete my account permanently
+            @if (deleteError) {
+              <p class="profile-delete-modal__error">{{ deleteError }}</p>
+            }
+            <button type="button" class="profile-delete-modal__submit" (click)="submitDeleteAccount()" [disabled]="deleteSubmitting">
+              {{ deleteSubmitting ? 'Deleting…' : 'Delete my account permanently' }}
             </button>
           </div>
         </div>
@@ -636,9 +647,6 @@
         </label>
       </li>
     </ul>
-    <button type="button" class="profile-btn-primary profile-btn-primary--modal-foot" (click)="saveChanges()">
-      Save changes
-    </button>
   </div>
 </ng-template>
 

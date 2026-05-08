@@ -1,4 +1,17 @@
-<div class="sd-page" *ngIf="device">
+<!-- Loading -->
+<div *ngIf="isLoading" class="sd-loading">
+  <div class="sd-loading__spinner" aria-label="Loading device..."></div>
+  <p class="sd-loading__text">Loading device...</p>
+</div>
+
+<!-- Error / not found -->
+<div *ngIf="!isLoading && !device" class="sd-loading">
+  <p class="sd-loading__text">{{ loadError || 'Device not found.' }}</p>
+  <button type="button" class="sd-back" style="margin-top:1rem;" (click)="goBack()">Go back</button>
+</div>
+
+<!-- Device detail -->
+<div class="sd-page" *ngIf="!isLoading && device">
   <header class="sd-hero">
     <div class="sd-hero__row">
       <button type="button" class="sd-back" (click)="goBack()" aria-label="Back">
@@ -21,6 +34,7 @@
   </header>
 
   <div class="sd-body">
+    <!-- Details card -->
     <section class="sd-card" aria-labelledby="sd-details-heading">
       <h2 id="sd-details-heading" class="sd-card__title">Device details</h2>
       <dl class="sd-detail-grid">
@@ -31,140 +45,81 @@
         <div class="sd-field">
           <dt class="sd-field__label">Status</dt>
           <dd class="sd-field__value">
-            <span class="sd-pill" [class.sd-pill--on]="device.status === 'ON'" [class.sd-pill--off]="device.status === 'OFF'">
+            <span class="sd-pill" [class.sd-pill--on]="device.status === 'ON'" [class.sd-pill--off]="device.status !== 'ON'">
               {{ device.status }}
             </span>
           </dd>
         </div>
         <div class="sd-field">
-          <dt class="sd-field__label">Location</dt>
-          <dd class="sd-field__value">{{ device.location }}</dd>
-        </div>
-        <div class="sd-field">
-          <dt class="sd-field__label">Battery</dt>
-          <dd class="sd-field__value">
-            <span [class.sd-battery--high]="device.battery > 50" [class.sd-battery--low]="device.battery <= 50">
-              {{ device.battery }}%
-            </span>
-          </dd>
-        </div>
-        <div class="sd-field">
-          <dt class="sd-field__label">Model</dt>
-          <dd class="sd-field__value">{{ device.model }}</dd>
+          <dt class="sd-field__label">Device type</dt>
+          <dd class="sd-field__value">{{ device.deviceType }}</dd>
         </div>
         <div class="sd-field">
           <dt class="sd-field__label">Device ID</dt>
           <dd class="sd-field__value sd-field__value--mono">{{ device.deviceId }}</dd>
         </div>
         <div class="sd-field">
+          <dt class="sd-field__label">Location</dt>
+          <dd class="sd-field__value">{{ device.location }}</dd>
+        </div>
+        <div class="sd-field">
           <dt class="sd-field__label">Central connection</dt>
           <dd class="sd-field__value">{{ device.centralConnection }}</dd>
         </div>
         <div class="sd-field">
-          <dt class="sd-field__label">Firmware / updates</dt>
-          <dd class="sd-field__value">{{ device.version }}</dd>
+          <dt class="sd-field__label">Model</dt>
+          <dd class="sd-field__value">{{ device.model }}</dd>
+        </div>
+        <div class="sd-field">
+          <dt class="sd-field__label">Last activated</dt>
+          <dd class="sd-field__value">{{ device.schedule }}</dd>
         </div>
       </dl>
     </section>
 
-    <section
-      class="sd-card"
-      *ngIf="device.historyKind === 'central' && device.centralHistory?.length"
-      aria-labelledby="sd-history-heading"
-    >
-      <h2 id="sd-history-heading" class="sd-card__title">Device history</h2>
-      <p class="sd-history-note">Communication and coordination with registered node devices.</p>
-      <div class="sd-table-wrap">
-        <table class="sd-table">
-          <thead>
-            <tr>
-              <th scope="col">Time triggered</th>
-              <th scope="col">Event</th>
-              <th scope="col">Node device</th>
-              <th scope="col">Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let log of device.centralHistory">
-              <td>{{ log.timeTriggered }}</td>
-              <td>{{ log.event }}</td>
-              <td>{{ log.nodeDevice }}</td>
-              <td>{{ log.detail }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <!-- Live device logs -->
+    <section class="sd-card" aria-labelledby="sd-logs-heading">
+      <h2 id="sd-logs-heading" class="sd-card__title">Device logs</h2>
+      <p class="sd-history-note">Recent telemetry and deterrence events from the API.</p>
 
-    <section
-      class="sd-card"
-      *ngIf="device.historyKind === 'node' && device.nodeHistory?.length"
-      aria-labelledby="sd-history-node-heading"
-    >
-      <h2 id="sd-history-node-heading" class="sd-card__title">Device history</h2>
-      <p class="sd-history-note">Pest deterrence events (for reports).</p>
-      <div class="sd-table-wrap">
-        <table class="sd-table">
-          <thead>
-            <tr>
-              <th scope="col">Time triggered</th>
-              <th scope="col">Pest detected</th>
-              <th scope="col">Frequency (Hz)</th>
-              <th scope="col">Duration</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let log of device.nodeHistory">
-              <td>{{ log.timeTriggered }}</td>
-              <td>{{ log.pestClass }}</td>
-              <td>{{ log.frequencyHz | number }}</td>
-              <td>{{ log.durationDisplay }} ({{ log.durationSeconds }} s)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section
-      class="sd-card"
-      *ngIf="device.historyKind === 'legacy' && device.history && device.history.length > 0"
-      aria-labelledby="sd-history-legacy-heading"
-    >
-      <h2 id="sd-history-legacy-heading" class="sd-card__title">Device history</h2>
-      <div class="sd-table-wrap">
-        <table class="sd-table">
-          <thead>
-            <tr>
-              <th scope="col">Time triggered</th>
-              <th scope="col">Animal detected</th>
-              <th scope="col">Duration</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let log of device.history">
-              <td>{{ log.time }}</td>
-              <td>{{ log.animal }}</td>
-              <td>{{ log.duration }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <ng-container *ngIf="device.apiLogs && device.apiLogs.length > 0; else noLogs">
+        <div class="sd-table-wrap">
+          <table class="sd-table">
+            <thead>
+              <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Event / Pest</th>
+                <th scope="col">Frequency (Hz)</th>
+                <th scope="col">Duration</th>
+                <th scope="col">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let log of device.apiLogs">
+                <td>{{ formatLogTime(log) }}</td>
+                <td>{{ log.pest_class || log.animal || log.event || 'N/A' }}</td>
+                <td>{{ log.frequency_hz != null ? (log.frequency_hz | number) : 'N/A' }}</td>
+                <td>{{ log.duration_display || (log.duration_seconds != null ? log.duration_seconds + ' s' : 'N/A') }}</td>
+                <td>{{ log.detail || log.message || 'N/A' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+      <ng-template #noLogs>
+        <p class="sd-history-note">No logs recorded yet for this device.</p>
+      </ng-template>
     </section>
   </div>
 
+  <!-- Edit modal -->
   <app-modal [isOpen]="isModalOpen" title="Edit Device" (close)="closeModal()">
     <form class="modal-form">
       <div class="form-group">
         <label>Device Name</label>
         <div class="input-group">
-          <input
-            type="text"
-            [(ngModel)]="editableDevice.deviceName"
-            name="deviceName"
-            class="input-field"
-            [readonly]="!editModes.deviceName"
-            [class.editable]="editModes.deviceName"
-          />
+          <input type="text" [(ngModel)]="editableDevice.deviceName" name="deviceName"
+            class="input-field" [readonly]="!editModes.deviceName" [class.editable]="editModes.deviceName" />
           <button type="button" class="change-btn" (click)="toggleEditMode('deviceName')">
             {{ editModes.deviceName ? 'Save' : 'Change' }}
           </button>
@@ -174,14 +129,8 @@
       <div class="form-group">
         <label>Device Owner</label>
         <div class="input-group">
-          <input
-            type="text"
-            [(ngModel)]="editableDevice.owner"
-            name="owner"
-            class="input-field"
-            [readonly]="!editModes.owner"
-            [class.editable]="editModes.owner"
-          />
+          <input type="text" [(ngModel)]="editableDevice.owner" name="owner"
+            class="input-field" [readonly]="!editModes.owner" [class.editable]="editModes.owner" />
           <button type="button" class="change-btn" (click)="toggleEditMode('owner')">
             {{ editModes.owner ? 'Save' : 'Change' }}
           </button>
@@ -191,14 +140,8 @@
       <div class="form-group">
         <label>Device Location</label>
         <div class="input-group">
-          <input
-            type="text"
-            [(ngModel)]="editableDevice.location"
-            name="location"
-            class="input-field"
-            [readonly]="!editModes.location"
-            [class.editable]="editModes.location"
-          />
+          <input type="text" [(ngModel)]="editableDevice.location" name="location"
+            class="input-field" [readonly]="!editModes.location" [class.editable]="editModes.location" />
           <button type="button" class="change-btn" (click)="toggleEditMode('location')">
             {{ editModes.location ? 'Save' : 'Change' }}
           </button>
@@ -213,24 +156,6 @@
             <input type="checkbox" [(ngModel)]="isDeviceOn" name="status" (change)="updateDeviceStatus()" />
             <span class="slider"></span>
           </label>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Device Schedule</label>
-        <div class="input-group">
-          <input
-            type="text"
-            [(ngModel)]="editableDevice.schedule"
-            name="schedule"
-            placeholder="Schedule Device Active Time"
-            class="input-field"
-            [readonly]="!editModes.schedule"
-            [class.editable]="editModes.schedule"
-          />
-          <button type="button" class="change-btn" (click)="toggleEditMode('schedule')">
-            {{ editModes.schedule ? 'Save' : 'Change' }}
-          </button>
         </div>
       </div>
     </form>

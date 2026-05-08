@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -11,8 +11,6 @@ export interface MemberCard {
   id: string;
   name: string;
   farmName: string;
-  address: string;
-  phone: string;
   deviceCount: number;
   /** Display label for the role pill (e.g. Farmer). */
   role: string;
@@ -30,6 +28,7 @@ export class DashboardComponent implements OnInit {
   private readonly notifications = inject(NotificationService);
   private readonly auth = inject(AuthService);
   private readonly api = inject(ScarrowApiService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   /** Combined join + message counts for the bell. */
   readonly notifSummary = toSignal(this.notifications.summary$, {
@@ -46,54 +45,37 @@ export class DashboardComponent implements OnInit {
   /** When set, the member quick-preview dialog is visible. */
   previewMember: MemberCard | null = null;
 
-  members: MemberCard[] = [
-    {
-      id: '1',
-      name: 'Juan Dela Cruz',
-      farmName: 'Scarrow Demo Farm',
-      address: '123 Rizal St., Brgy. San Jose, Cabanatuan City, Nueva Ecija',
-      phone: '09171234567',
-      deviceCount: 1,
-      role: 'Farmer',
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      farmName: 'Scarrow Demo Farm',
-      address: 'Lot 4, Agri-Subd., Talavera, Nueva Ecija',
-      phone: '+63 917 000 1122',
-      deviceCount: 2,
-      role: 'Farmer',
-    },
-    {
-      id: '3',
-      name: 'Pedro Ramos',
-      farmName: 'Scarrow Demo Farm',
-      address: 'Purok 2, Brgy. Sto. Niño, Cabanatuan City',
-      phone: '+63 918 444 5566',
-      deviceCount: 1,
-      role: 'Farmer',
-    },
-  ];
+  isLoading = true;
+  loadError = '';
+  members: MemberCard[] = [];
 
   async ngOnInit(): Promise<void> {
+    this.isLoading = true;
+    this.loadError = '';
     const gid = this.auth.groupId;
     const orgName = this.auth.groupName ?? 'Organization';
-    if (!gid) return;
+    if (!gid) {
+      this.loadError = 'No organization found in session. Please sign in again.';
+      this.isLoading = false;
+      this.cdr.markForCheck();
+      return;
+    }
     try {
       const apiMembers = await firstValueFrom(this.api.getGroupMembers(gid));
-      if (!apiMembers.length) return;
-      this.members = apiMembers.map((m) => ({
-        id: m.user_id,
-        name: m.display_name,
-        farmName: orgName,
-        address: '—',
-        phone: '—',
-        deviceCount: 0,
-        role: m.role === 'HEAD' ? 'Head' : m.role === 'MEMBER' ? 'Farmer' : m.role,
-      }));
+      this.members = apiMembers
+        .filter((m) => m.user_id !== this.auth.userId)
+        .map((m) => ({
+          id: m.user_id,
+          name: m.display_name,
+          farmName: orgName,
+          deviceCount: 0,
+          role: (m.role ?? '').toUpperCase() === 'HEAD' ? 'Head' : 'Farmer',
+        }));
     } catch {
-      /* keep demo roster */
+      this.loadError = 'Could not load members. Check your connection.';
+    } finally {
+      this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 

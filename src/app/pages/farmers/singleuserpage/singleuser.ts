@@ -1,28 +1,26 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../../../services/auth.service';
 import {
-  PROFILE_BY_ID,
-  type FarmerDevice,
-  type FarmerProfile,
-} from '../../../data/farmer-profiles.data';
-import {
-  getFarmerActivityLogs,
-  groupActivityLogsForFarmerTab,
-} from '../../../data/farmer-activity-logs.data';
-import {
-  getReportPestEventsForFarmer,
-  type ReportPestEvent,
-} from '../../../data/scarrow-devices.data';
+  ScarrowApiService,
+  ApiDevice,
+  ApiActivityLog,
+  ApiHubReport,
+} from '../../../services/scarrow-api.service';
 import { FarmerReportChartComponent } from '../../../components/farmer-report-chart/farmer-report-chart.component';
 
 export type FarmerTab = 'devices' | 'reports' | 'activity';
 
-export type { FarmerDevice, FarmerProfile };
+interface ActivityGroup {
+  label: string;
+  entries: ActivityLogEntry[];
+}
 
-export interface ActivityLogEntry {
-  userName: string;
+interface ActivityLogEntry {
+  actor: string;
   action: string;
   when: string;
 }
@@ -30,353 +28,267 @@ export interface ActivityLogEntry {
 @Component({
   selector: 'app-singleuser',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, FarmerReportChartComponent],
+  imports: [CommonModule, FormsModule, FarmerReportChartComponent],
   templateUrl: './singleuser.html',
   styleUrls: ['./singleuser.css'],
 })
 export class SingleuserComponent implements OnInit {
-  profile: FarmerProfile | null = null;
+  isLoading = true;
+  loadError = '';
+
+  // Member info
+  userId = '';
+  displayName = '';
+  role = '';
+
+  // Devices tab
+  devices: ApiDevice[] = [];
+  devicesLoading = false;
+  devicesError = '';
+
+  // Linked-nodes drawer
+  linkedNodesFor: ApiDevice | null = null;
+
+  // Activity tab
+  activityGroups: ActivityGroup[] = [];
+  activityLoading = false;
+  activityError = '';
+
+  // Reports tab
   activeTab: FarmerTab = 'devices';
-
-  /** Central device whose linked-nodes preview is open (tap device card). */
-  linkedNodesFor: FarmerDevice | null = null;
-
-  /** Reports tab — driven by node pest events + device filters. */
-  reportDeviceSelect = '';
-  selectedReportDevices: string[] = [];
-  reportStats = { active: 0, error: 0, inactive: 0 };
-  reportFromMonth = '2026-04';
-  reportToMonth = '2026-04';
+  reportLoading = false;
+  reportError = '';
+  reportHubId = '';
+  reportFromMonth = '';
+  reportToMonth = '';
   reportChartLabels: string[] = [];
   reportChartValues: number[] = [];
-  reportChartDatasetLabel = 'All hubs';
-  reportChartXTitle = 'Months';
-  reportTopDevices: string[] = [];
-  reportTotalTriggered = 0;
-  reportTotalActiveMins = 0;
-  reportGranularity: 'monthly' | 'weekly' = 'monthly';
-
-  /** Activity tab — demo data. */
-  activityGroups: { label: string; entries: ActivityLogEntry[] }[] = [];
+  reportChartDatasetLabel = '';
+  reportChartXTitle = 'Days';
+  reportTotalEvents = 0;
+  reportPestDist: { pest: string; count: number }[] = [];
+  reportGranularity: 'daily' | 'monthly' = 'daily';
+  availableHubs: ApiDevice[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private auth: AuthService,
+    private api: ScarrowApiService,
   ) {}
 
-  ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id') ?? '';
-    this.profile = PROFILE_BY_ID[id] ?? this.fallbackProfile(id);
-    this.initReportFilters();
-    this.refreshReportDashboard();
-    this.initActivityFromSharedData();
+  async ngOnInit(): Promise<void> {
+    this.userId = this.route.snapshot.paramMap.get('id') ?? '';
+    await this.loadMemberData();
   }
 
-  private initReportFilters(): void {
-    const first = this.profile?.devices[0];
-    this.reportDeviceSelect = first?.id ?? '';
-    this.selectedReportDevices = first?.centralName ? [first.centralName] : [];
-
-    const farmerId = this.profile?.id ?? '';
-    const evts = farmerId ? getReportPestEventsForFarmer(farmerId) : [];
-    if (evts.length) {
-      const yms = evts.map((e) => e.occurredAt.slice(0, 7));
-      this.reportFromMonth = yms.reduce((a, b) => (a < b ? a : b));
-      this.reportToMonth = yms.reduce((a, b) => (a > b ? a : b));
-    } else {
-      this.reportFromMonth = '2026-02';
-      this.reportToMonth = '2026-04';
+  private async loadMemberData(): Promise<void> {
+    this.isLoading = true;
+    this.loadError = '';
+    const gid = this.auth.groupId;
+    if (!gid) {
+      this.loadError = 'Group session not found. Please sign in again.';
+      this.isLoading = false;
+      return;
     }
-  }
-
-  private initActivityFromSharedData(): void {
-    const id = this.profile?.id ?? '';
-    const name = this.profile?.name ?? 'Member';
-    const logs = getFarmerActivityLogs(id, name);
-    this.activityGroups = groupActivityLogsForFarmerTab(logs);
-  }
-
-  get reportPeriodSummary(): string {
-    const a = this.reportFromMonth.split('-');
-    const b = this.reportToMonth.split('-');
-    if (a.length < 2 || b.length < 2) return 'Node deterrence reports';
-    const d1 = new Date(+a[0], +a[1] - 1, 1);
-    const d2 = new Date(+b[0], +b[1] - 1, 1);
-    const m1 = d1.toLocaleDateString('en-US', { month: 'short' });
-    const m2 = d2.toLocaleDateString('en-US', { month: 'short' });
-    const y1 = d1.getFullYear();
-    const y2 = d2.getFullYear();
-    const kind =
-      this.reportGranularity === 'weekly' ? 'Weekly reports' : 'Monthly reports';
-    if (y1 === y2) {
-      return `${kind} for ${m1} – ${m2} ${y1} (node devices)`;
-    }
-    return `${kind} for ${m1} ${y1} – ${m2} ${y2} (node devices)`;
-  }
-
-  onReportDeviceSelectChange(): void {
-    const d = this.profile?.devices.find((x) => x.id === this.reportDeviceSelect);
-    if (!d) return;
-    if (!this.selectedReportDevices.includes(d.centralName)) {
-      this.selectedReportDevices = [...this.selectedReportDevices, d.centralName];
-    }
-    this.refreshReportDashboard();
-  }
-
-  removeReportDeviceChip(name: string): void {
-    this.selectedReportDevices = this.selectedReportDevices.filter((n) => n !== name);
-    this.refreshReportDashboard();
-  }
-
-  onReportMonthChange(): void {
-    if (this.reportFromMonth && this.reportToMonth && this.reportFromMonth > this.reportToMonth) {
-      const t = this.reportFromMonth;
-      this.reportFromMonth = this.reportToMonth;
-      this.reportToMonth = t;
-    }
-    this.refreshReportDashboard();
-  }
-
-  setReportGranularity(g: 'monthly' | 'weekly'): void {
-    this.reportGranularity = g;
-    this.refreshReportDashboard();
-  }
-
-  private ymToMonthStart(ym: string): Date {
-    const [y, m] = ym.split('-').map(Number);
-    return new Date(y, m - 1, 1, 0, 0, 0, 0);
-  }
-
-  private ymToMonthEnd(ym: string): Date {
-    const [y, m] = ym.split('-').map(Number);
-    return new Date(y, m, 0, 23, 59, 59, 999);
-  }
-
-  private eachYmInclusive(fromYm: string, toYm: string): string[] {
-    let a = fromYm;
-    let b = toYm;
-    if (a > b) {
-      const t = a;
-      a = b;
-      b = t;
-    }
-    const out: string[] = [];
-    const [y0, m0] = a.split('-').map(Number);
-    const [y1, m1] = b.split('-').map(Number);
-    let y = y0;
-    let m = m0;
-    while (y < y1 || (y === y1 && m <= m1)) {
-      out.push(`${y}-${String(m).padStart(2, '0')}`);
-      m += 1;
-      if (m > 12) {
-        m = 1;
-        y += 1;
+    try {
+      const members = await firstValueFrom(this.api.getGroupMembers(gid));
+      const member = members.find((m) => m.user_id === this.userId);
+      if (!member) {
+        this.loadError = 'Member not found.';
+        this.isLoading = false;
+        return;
       }
+      this.displayName = member.display_name;
+      this.role = member.role;
+      await this.loadDevices(gid);
+    } catch {
+      this.loadError = 'Failed to load member data. Check your connection.';
+    } finally {
+      this.isLoading = false;
     }
-    return out;
   }
 
-  private formatYmLabel(ym: string, allYms: string[]): string {
-    const [y, mo] = ym.split('-').map(Number);
-    const d = new Date(y, mo - 1, 1);
-    const monthShort = d.toLocaleDateString('en-US', { month: 'short' });
-    const years = new Set(allYms.map((x) => x.slice(0, 4)));
-    if (years.size > 1) {
-      return `${monthShort} ${y}`;
-    }
-    return monthShort;
-  }
-
-  private buildWeeklySeries(
-    events: ReportPestEvent[],
-    fromYm: string,
-    toYm: string,
-  ): { labels: string[]; values: number[] } {
-    let a = fromYm;
-    let b = toYm;
-    if (a > b) {
-      const t = a;
-      a = b;
-      b = t;
-    }
-    const rangeStart = this.ymToMonthStart(a);
-    const rangeEnd = this.ymToMonthEnd(b);
-    const labels: string[] = [];
-    const values: number[] = [];
-    let wkStart = new Date(rangeStart);
-    let guard = 0;
-    while (wkStart <= rangeEnd && guard++ < 52) {
-      const wkEnd = new Date(wkStart);
-      wkEnd.setDate(wkEnd.getDate() + 6);
-      wkEnd.setHours(23, 59, 59, 999);
-      const sliceEnd = wkEnd > rangeEnd ? rangeEnd : wkEnd;
-      const count = events.filter((e) => {
-        const t = new Date(e.occurredAt).getTime();
-        return t >= wkStart.getTime() && t <= sliceEnd.getTime();
-      }).length;
-      labels.push(
-        wkStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  private async loadDevices(gid: string): Promise<void> {
+    this.devicesLoading = true;
+    this.devicesError = '';
+    try {
+      this.devices = await firstValueFrom(this.api.getMemberDevices(gid, this.userId));
+      this.availableHubs = this.devices.filter(
+        (d) => (d.device_type ?? '').toUpperCase() === 'CENTRAL',
       );
-      values.push(count);
-      wkStart = new Date(sliceEnd);
-      wkStart.setDate(wkStart.getDate() + 1);
-      wkStart.setHours(0, 0, 0, 0);
+      if (this.availableHubs.length) {
+        this.reportHubId = this.availableHubs[0].id;
+      }
+    } catch {
+      this.devicesError = 'Could not load devices for this member.';
+    } finally {
+      this.devicesLoading = false;
     }
-    return { labels, values };
   }
 
-  private refreshReportDashboard(): void {
-    if (!this.profile) return;
-
-    this.reportStats = {
-      active: this.profile.devices.filter((d) => d.online && d.status === 'Active').length,
-      inactive: this.profile.devices.filter((d) => !d.online || d.status === 'Inactive').length,
-      error: 0,
-    };
-
-    const allFarmer = getReportPestEventsForFarmer(this.profile.id);
-    /** Hub ids: pest metrics come only from **nodes paired** to these centrals. */
-    const allowedCentralIds =
-      this.selectedReportDevices.length > 0
-        ? this.profile.devices
-            .filter((d) => this.selectedReportDevices.includes(d.centralName))
-            .map((d) => d.id)
-        : this.profile.devices.map((d) => d.id);
-
-    let fromYm = this.reportFromMonth;
-    let toYm = this.reportToMonth;
-    if (fromYm && toYm && fromYm > toYm) {
-      const t = fromYm;
-      fromYm = toYm;
-      toYm = t;
+  private async loadActivity(): Promise<void> {
+    const gid = this.auth.groupId;
+    if (!gid) return;
+    this.activityLoading = true;
+    this.activityError = '';
+    try {
+      const logs = await firstValueFrom(this.api.getMemberActivityLogs(gid, this.userId));
+      this.activityGroups = this.groupLogs(logs);
+    } catch {
+      this.activityError = 'Could not load activity logs for this member.';
+    } finally {
+      this.activityLoading = false;
     }
+  }
 
-    const rangeStart = this.ymToMonthStart(fromYm);
-    const rangeEnd = this.ymToMonthEnd(toYm);
-
-    let events = allFarmer.filter((e) => allowedCentralIds.includes(e.centralId));
-    events = events.filter((e) => {
-      const t = new Date(e.occurredAt).getTime();
-      return t >= rangeStart.getTime() && t <= rangeEnd.getTime();
-    });
-
-    this.reportTotalTriggered = events.length;
-    this.reportTotalActiveMins = Math.round(
-      events.reduce((s, e) => s + e.durationSeconds / 60, 0),
-    );
-
-    const byNode = new Map<string, number>();
-    for (const e of events) {
-      byNode.set(e.nodeName, (byNode.get(e.nodeName) ?? 0) + 1);
+  private groupLogs(logs: ApiActivityLog[]): ActivityGroup[] {
+    const groups = new Map<string, ActivityLogEntry[]>();
+    const today = new Date();
+    for (const log of logs) {
+      const ts = log.created_at ?? log.timestamp ?? '';
+      let label = 'Older';
+      if (ts) {
+        const d = new Date(ts);
+        const diff = Math.floor((today.getTime() - d.getTime()) / 86400000);
+        if (diff === 0) label = 'Today';
+        else if (diff === 1) label = 'Yesterday';
+        else if (diff < 7) label = 'This week';
+        else if (diff < 30) label = 'This month';
+      }
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label)!.push({
+        actor: log.actor_name ?? log.user ?? this.displayName,
+        action: log.action ?? log.message ?? 'Activity recorded',
+        when: ts ? new Date(ts).toLocaleString() : 'Unknown time',
+      });
     }
-    this.reportTopDevices = [...byNode.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name]) => name);
+    const order = ['Today', 'Yesterday', 'This week', 'This month', 'Older'];
+    const result: ActivityGroup[] = [];
+    for (const label of order) {
+      const entries = groups.get(label);
+      if (entries?.length) result.push({ label, entries });
+    }
+    return result;
+  }
 
-    const chipLabel =
-      this.selectedReportDevices.length > 0
-        ? this.selectedReportDevices.join(', ')
-        : 'All hubs';
-    this.reportChartDatasetLabel =
-      chipLabel.length > 42 ? `${chipLabel.slice(0, 39)}…` : chipLabel;
+  async loadHubReport(): Promise<void> {
+    if (!this.reportHubId) { this.reportError = 'No hub selected.'; return; }
+    this.reportLoading = true;
+    this.reportError = '';
+    try {
+      const startDate = this.reportFromMonth ? this.reportFromMonth + '-01' : undefined;
+      const endDate = this.reportToMonth
+        ? this.reportToMonth + '-' + new Date(
+            +this.reportToMonth.split('-')[0],
+            +this.reportToMonth.split('-')[1],
+            0,
+          ).getDate()
+        : undefined;
+      const report = await firstValueFrom(this.api.getHubReport(this.reportHubId, startDate, endDate));
+      this.applyReport(report);
+    } catch {
+      this.reportError = 'Could not load report. Try again.';
+    } finally {
+      this.reportLoading = false;
+    }
+  }
 
-    if (this.reportGranularity === 'weekly') {
-      const w = this.buildWeeklySeries(events, fromYm, toYm);
-      this.reportChartLabels = w.labels;
-      this.reportChartValues = w.values;
-      this.reportChartXTitle = 'Week starting';
+  private applyReport(report: ApiHubReport): void {
+    this.reportTotalEvents = report.total_events ?? 0;
+    const dist = report.pest_distribution ?? {};
+    this.reportPestDist = Object.entries(dist)
+      .map(([pest, count]) => ({ pest, count }))
+      .sort((a, b) => b.count - a.count);
+    const hub = this.availableHubs.find((h) => h.id === this.reportHubId);
+    this.reportChartDatasetLabel = hub?.name ?? 'Hub report';
+
+    const trends = report.daily_trends ?? [];
+    if (trends.length) {
+      this.reportChartLabels = trends.map((t) => t.date);
+      this.reportChartValues = trends.map((t) => t.count);
+      this.reportChartXTitle = 'Days';
     } else {
-      const months = this.eachYmInclusive(fromYm, toYm);
-      this.reportChartLabels = months.map((ym) => this.formatYmLabel(ym, months));
-      const counts = new Map<string, number>();
-      for (const ym of months) {
-        counts.set(ym, 0);
-      }
-      for (const e of events) {
-        const k = e.occurredAt.slice(0, 7);
-        if (counts.has(k)) {
-          counts.set(k, (counts.get(k) ?? 0) + 1);
-        }
-      }
-      this.reportChartValues = months.map((ym) => counts.get(ym) ?? 0);
-      this.reportChartXTitle = 'Months';
+      this.reportChartLabels = [];
+      this.reportChartValues = [];
     }
-  }
-
-  private fallbackProfile(id: string): FarmerProfile {
-    return {
-      id,
-      name: 'Member',
-      farmName: '—',
-      role: 'Farmer',
-      devices: [],
-    };
-  }
-
-  get totalDevices(): number {
-    return this.profile?.devices.length ?? 0;
-  }
-
-  get onlineCount(): number {
-    return this.profile?.devices.filter((d) => d.online).length ?? 0;
-  }
-
-  get offlineCount(): number {
-    return this.totalDevices - this.onlineCount;
   }
 
   setTab(tab: FarmerTab): void {
     this.activeTab = tab;
-    if (tab === 'reports') {
-      this.refreshReportDashboard();
+    if (tab === 'activity' && !this.activityGroups.length && !this.activityLoading) {
+      void this.loadActivity();
     }
+    if (tab === 'reports' && this.reportHubId && !this.reportChartLabels.length && !this.reportLoading) {
+      void this.loadHubReport();
+    }
+  }
+
+  get totalDevices(): number { return this.devices.length; }
+
+  get onlineCount(): number {
+    return this.devices.filter((d) => (d.status ?? '').toUpperCase() === 'ONLINE').length;
+  }
+
+  get offlineCount(): number { return this.totalDevices - this.onlineCount; }
+
+  get nodeCount(): number {
+    return this.devices.filter((d) => !this.isCentral(d)).length;
+  }
+
+  isOnline(d: ApiDevice): boolean {
+    return (d.status ?? '').toUpperCase() === 'ONLINE';
+  }
+
+  isCentral(d: ApiDevice): boolean {
+    return (d.device_type ?? '').toUpperCase() === 'CENTRAL';
+  }
+
+  deviceDisplayName(d: ApiDevice): string {
+    return d.name ?? ((d.device_type ?? 'Device') + ' ' + d.id.slice(0, 6));
   }
 
   goBack(): void {
     void this.router.navigate(['/dashboard']);
   }
 
-  openLinkedNodes(device: FarmerDevice): void {
-    this.linkedNodesFor = device;
+  openLinkedNodes(device: ApiDevice): void {
+    if (this.isCentral(device)) {
+      this.linkedNodesFor = device;
+    }
   }
 
-  closeLinkedNodes(): void {
-    this.linkedNodesFor = null;
-  }
+  closeLinkedNodes(): void { this.linkedNodesFor = null; }
 
   viewAllLinkedNodes(): void {
     const d = this.linkedNodesFor;
     if (!d) return;
-    const farmer = this.profile?.id;
     this.closeLinkedNodes();
     void this.router.navigate(['/device', d.id, 'nodes'], {
-      queryParams: farmer ? { farmer } : {},
+      queryParams: { farmer: this.userId },
     });
   }
 
   @HostListener('document:keydown.escape')
   onEscapeCloseLinkedNodes(): void {
-    if (this.linkedNodesFor) {
-      this.closeLinkedNodes();
-    }
+    if (this.linkedNodesFor) this.closeLinkedNodes();
   }
 
-  editDevice(device: FarmerDevice, event?: Event): void {
+  editDevice(device: ApiDevice, event?: Event): void {
     event?.stopPropagation();
     void this.router.navigate(['/device', device.id], {
-      queryParams: this.profile?.id ? { farmer: this.profile.id } : {},
+      queryParams: { farmer: this.userId },
     });
   }
 
-  deleteDevice(device: FarmerDevice, event?: Event): void {
-    event?.stopPropagation();
-    if (!this.profile) return;
-    if (!confirm(`Remove this device from ${this.profile.name}'s list?`)) return;
-    this.profile = {
-      ...this.profile,
-      devices: this.profile.devices.filter((d) => d.id !== device.id),
-    };
-    this.refreshReportDashboard();
+  onReportMonthChange(): void {
+    if (this.reportFromMonth && this.reportToMonth && this.reportFromMonth > this.reportToMonth) {
+      [this.reportFromMonth, this.reportToMonth] = [this.reportToMonth, this.reportFromMonth];
+    }
+    if (this.reportHubId) void this.loadHubReport();
+  }
+
+  onHubChange(): void {
+    if (this.reportHubId) void this.loadHubReport();
   }
 }

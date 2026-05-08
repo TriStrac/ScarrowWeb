@@ -3,6 +3,404 @@
   using relative units, flexbox, and media queries.
 */
 
+/* ── Header row with Register button ─────────────────────────────────── */
+.header-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.register-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.2rem;
+  background: #37612F;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: Nunito, system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.register-btn:hover {
+  background: #2d4c24;
+  transform: translateY(-1px);
+}
+
+.register-btn:active {
+  transform: translateY(0);
+}
+
+/* ── Loading state ────────────────────────────────────────────────────── */
+.device-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 0;
+  color: #627D5D;
+  font-family: Nunito, system-ui, sans-serif;
+  font-size: 0.9rem;
+}
+
+.device-loading__spinner {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid #e2e8f0;
+  border-top-color: #37612F;
+  border-radius: 50%;
+  animation: device-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes device-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Type badge ───────────────────────────────────────────────────────── */
+.type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.type-badge.central {
+  background: #dcefd8;
+  color: #2d5228;
+}
+
+.type-badge.node {
+  background: #e8f5e9;
+  color: #37612F;
+}
+
+.type-badge.— {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* ── Empty table row ──────────────────────────────────────────────────── */
+.empty-row {
+  text-align: center !important;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 2rem !important;
+}
+
+/* ── Hint / error text ────────────────────────────────────────────────── */
+.device-hint {
+  font-family: Nunito, system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: #627D5D;
+  margin: 0;
+}
+
+/* ── Search box icon ──────────────────────────────────────────────────── */
+.search-box svg {
+  flex-shrink: 0;
+}
+
+/* ── Register modal inner layout ─────────────────────────────────────── */
+.reg-intro {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  color: #475569;
+  font-family: Nunito, system-ui, sans-serif;
+}
+
+.reg-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+.reg-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.4rem 1rem;
+  border: 1.5px solid #d1e4cc;
+  border-radius: 12px;
+  background: #f8faf7;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  font-family: Nunito, system-ui, sans-serif;
+  text-align: center;
+}
+
+.reg-type-card:hover {
+  border-color: #37612F;
+  background: #f0f7ee;
+  transform: translateY(-2px);
+}
+
+.reg-type-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reg-type-icon--hub {
+  background: #dcefd8;
+  color: #37612F;
+}
+
+.reg-type-icon--node {
+  background: #e8f5e9;
+  color: #2d5228;
+}
+
+.reg-type-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.reg-type-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.reg-type-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* ── Back button ──────────────────────────────────────────────────────── */
+.reg-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  color: #37612F;
+  font-family: Nunito, system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 0 0.5rem;
+}
+
+.reg-back-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.reg-form-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #37612F;
+  font-family: Nunito, system-ui, sans-serif;
+}
+
+/* ── Form fields ──────────────────────────────────────────────────────── */
+.reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-family: Nunito, system-ui, sans-serif;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-label .req {
+  color: #dc2626;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #c5d9c0;
+  border-radius: 6px;
+  font-family: Nunito, system-ui, sans-serif;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: #fafcf9;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #37612F;
+  box-shadow: 0 0 0 2px rgba(55, 97, 47, 0.12);
+}
+
+select.input-field {
+  cursor: pointer;
+}
+
+/* ── Hint & error ─────────────────────────────────────────────────────── */
+.reg-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.reg-error {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+/* ── Form footer ──────────────────────────────────────────────────────── */
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.save-btn {
+  padding: 0.6rem 1.5rem;
+  background: #37612F;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: Nunito, system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #2d4c24;
+}
+
+.save-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Success screen ───────────────────────────────────────────────────── */
+.reg-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  font-family: Nunito, system-ui, sans-serif;
+  padding-bottom: 0.5rem;
+}
+
+.reg-success__icon {
+  width: 56px;
+  height: 56px;
+  background: #dcefd8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #37612F;
+}
+
+.reg-success__icon svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
+}
+
+.reg-success__msg {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #475569;
+  text-align: center;
+  line-height: 1.5;
+  max-width: 340px;
+}
+
+.reg-cred {
+  width: 100%;
+  background: #f8faf7;
+  border: 1px solid #d1e4cc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reg-cred__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid #e8f0e5;
+}
+
+.reg-cred__row:last-child {
+  border-bottom: none;
+}
+
+.reg-cred__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.reg-cred__value {
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.825rem;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.reg-cred__value--secret {
+  color: #b45309;
+  background: #fffbeb;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+@media (max-width: 480px) {
+  .reg-type-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .device-content {
   /* Use relative width and max-width for responsiveness */
   width: 90%;

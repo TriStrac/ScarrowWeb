@@ -42,9 +42,7 @@
                       (click)="goOrganizationRequests($event)"
                     >
                       <span class="dash-notify-panel__item-title">Join requests</span>
-                      <span class="dash-notify-panel__item-meta"
-                        >{{ notifSummary().joinCount }} pending</span
-                      >
+                      <span class="dash-notify-panel__item-meta">{{ notifSummary().joinCount }} pending</span>
                     </a>
                   </li>
                 }
@@ -52,9 +50,7 @@
                   <li>
                     <a href="/messages" class="dash-notify-panel__item" (click)="goMessages($event)">
                       <span class="dash-notify-panel__item-title">Messages</span>
-                      <span class="dash-notify-panel__item-meta"
-                        >{{ notifSummary().unreadMessages }} unread</span
-                      >
+                      <span class="dash-notify-panel__item-meta">{{ notifSummary().unreadMessages }} unread</span>
                     </a>
                   </li>
                 }
@@ -71,37 +67,48 @@
       <div class="dash-section-head__row">
         <h2 class="dash-section-title">
           Members
-          <span class="dash-badge">{{ members.length }}</span>
+          @if (!isLoading) {
+            <span class="dash-badge">{{ members.length }}</span>
+          }
         </h2>
       </div>
       <p class="dash-section-hint">Tap a member for a quick summary, or open their full workspace.</p>
     </header>
 
-    <ul class="member-stack" role="list">
-      @for (m of members; track m.id) {
-        <li>
-          <button type="button" class="member-card" (click)="openMemberPreview(m)">
-            <span class="member-card__accent" aria-hidden="true"></span>
-            <div class="member-card__avatar" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="12" cy="8" r="3.5" />
-                <path d="M6 20a6 6 0 0 1 12 0" stroke-linecap="round" />
-              </svg>
-            </div>
-            <div class="member-card__main">
-              <span class="member-card__name">{{ m.name }}</span>
-              <span class="member-card__farm">{{ m.farmName }}</span>
-              <span class="member-card__address" [attr.title]="m.address">{{ m.address }}</span>
-              <div class="member-card__chips">
-                <span class="chip">{{ m.phone }}</span>
-                <span class="chip">{{ m.deviceCount }} devices</span>
+    @if (isLoading) {
+      <div class="dash-loading" aria-label="Loading members">
+        <div class="dash-loading__spinner"></div>
+        <p class="dash-loading__text">Loading members…</p>
+      </div>
+    } @else if (loadError) {
+      <p class="dash-empty" style="color:#b91c1c">{{ loadError }}</p>
+    } @else if (members.length === 0) {
+      <p class="dash-empty">No members in your organization yet. Invite members from the Organization page.</p>
+    } @else {
+      <ul class="member-stack" role="list">
+        @for (m of members; track m.id) {
+          <li>
+            <button type="button" class="member-card" (click)="openMemberPreview(m)">
+              <span class="member-card__accent" aria-hidden="true"></span>
+              <div class="member-card__avatar" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M6 20a6 6 0 0 1 12 0" stroke-linecap="round" />
+                </svg>
               </div>
-            </div>
-            <span class="member-card__chevron" aria-hidden="true">›</span>
-          </button>
-        </li>
-      }
-    </ul>
+              <div class="member-card__main">
+                <span class="member-card__name">{{ m.name }}</span>
+                <span class="member-card__farm">{{ m.farmName }}</span>
+                <div class="member-card__chips">
+                  <span class="chip">{{ m.role }}</span>
+                </div>
+              </div>
+              <span class="member-card__chevron" aria-hidden="true">›</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
   </div>
 
   @if (previewMember; as m) {
@@ -125,32 +132,6 @@
         <div class="member-preview__body">
           <p class="member-preview__section-label">Details</p>
 
-          <div class="member-preview__row">
-            <span class="member-preview__icon-wrap" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z" stroke-linecap="round" stroke-linejoin="round" />
-                <circle cx="12" cy="10" r="2.5" />
-              </svg>
-            </span>
-            <div class="member-preview__row-text">
-              <span class="member-preview__label">Address</span>
-              <span class="member-preview__value">{{ m.address }}</span>
-            </div>
-          </div>
-
-          <div class="member-preview__row">
-            <span class="member-preview__icon-wrap" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-linecap="round" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </span>
-            <div class="member-preview__row-text">
-              <span class="member-preview__label">Number</span>
-              <span class="member-preview__value">{{ m.phone }}</span>
-            </div>
-          </div>
-
           <div class="member-preview__devices">
             <span class="member-preview__devices-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
@@ -159,13 +140,13 @@
               </svg>
             </span>
             <div class="member-preview__devices-copy">
-              <span class="member-preview__devices-label">Registered devices</span>
-              <span class="member-preview__devices-count">{{ m.deviceCount }}</span>
+              <span class="member-preview__devices-label">Organization</span>
+              <span class="member-preview__devices-count">{{ m.farmName }}</span>
             </div>
           </div>
 
           <p class="member-preview__tip">
-            Tip: open a member's full view when you need to dig into devices, reports, or how they use the app.
+            Open a member's full view to see their devices, reports, and activity logs.
           </p>
 
           <div class="member-preview__actions">

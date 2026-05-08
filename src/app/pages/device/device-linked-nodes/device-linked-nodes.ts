@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { findDeviceById, type FarmerDevice } from '../../../data/farmer-profiles.data';
-import { getNodesForCentral, type ScarrowNodeDeviceMock } from '../../../data/scarrow-devices.data';
+import { firstValueFrom } from 'rxjs';
+import { ScarrowApiService, ApiDevice } from '../../../services/scarrow-api.service';
 
 @Component({
   selector: 'app-device-linked-nodes',
@@ -12,20 +12,41 @@ import { getNodesForCentral, type ScarrowNodeDeviceMock } from '../../../data/sc
   styleUrls: ['./device-linked-nodes.css'],
 })
 export class DeviceLinkedNodesComponent implements OnInit {
-  central: FarmerDevice | null = null;
-  nodes: ScarrowNodeDeviceMock[] = [];
+  central: ApiDevice | null = null;
+  nodes: ApiDevice[] = [];
   farmerId: string | null = null;
+  isLoading = true;
+  loadError = '';
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private api: ScarrowApiService,
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
-    this.central = findDeviceById(id);
-    this.nodes = getNodesForCentral(id);
     this.farmerId = this.route.snapshot.queryParamMap.get('farmer');
+    await this.loadNodes(id);
+  }
+
+  private async loadNodes(centralId: string): Promise<void> {
+    this.isLoading = true;
+    this.loadError = '';
+    try {
+      const devices = await firstValueFrom(this.api.getMyDevices());
+      this.central = devices.find((d) => d.id === centralId) ?? null;
+      this.nodes = devices.filter(
+        (d) => (d.device_type ?? '').toUpperCase() === 'NODE',
+      );
+      if (!this.central) {
+        this.loadError = 'Central device not found.';
+      }
+    } catch {
+      this.loadError = 'Failed to load devices. Check your connection and try again.';
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   goBack(): void {

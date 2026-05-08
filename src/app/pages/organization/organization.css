@@ -1010,3 +1010,81 @@
     padding: 1.5rem 1.5rem 1.25rem;
   }
 }
+
+/* ── Loading spinner ──────────────────────────────────────────────────── */
+.org-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+}
+
+.org-loading__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #15803d;
+  border-radius: 50%;
+  animation: org-spin .7s linear infinite;
+}
+
+@keyframes org-spin { to { transform: rotate(360deg); } }
+
+.org-loading__text {
+  font-size: .9rem;
+  color: #64748b;
+}
+
+.org-empty-hint {
+  padding: 1.5rem 0;
+  color: #94a3b8;
+  font-size: .875rem;
+}
+
+/* ── Danger zone ─────────────────────────────────────────────────────── */
+.org-danger-zone {
+  margin: 2rem 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1.5px solid #fecaca;
+  border-radius: 12px;
+  background: #fff5f5;
+}
+
+.org-danger-zone__title {
+  font-size: .875rem;
+  font-weight: 700;
+  color: #991b1b;
+  margin: 0 0 .4rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.org-danger-zone__desc {
+  font-size: .825rem;
+  color: #6b7280;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.org-danger-zone__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .55rem 1.1rem;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+
+.org-danger-zone__btn:hover {
+  background: #fecaca;
+  border-color: #f87171;
+}

@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { Component, ChangeDetectorRef, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterModule } from '@angular/router';
@@ -13,12 +13,6 @@ import {
   MessagesApiService,
 } from '../../services/messages-api.service';
 import { AuthService } from '../../services/auth.service';
-import {
-  DEMO_ORG_MEMBERS,
-  DEMO_ORG_NAME,
-  dmThreadIdForMember,
-  getOrgMemberById,
-} from '../../data/demo-org-members';
 
 export interface InboxItem {
   id: string;
@@ -28,7 +22,6 @@ export interface InboxItem {
   time: string;
   unread: boolean;
   displayName?: string;
-  phone?: string;
   organization?: string;
   contactSubtitle?: string;
   /** Other participant user id (for POST /messages/) */
@@ -58,6 +51,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private readonly scarrow = inject(ScarrowApiService);
   private readonly messagesApi = inject(MessagesApiService);
   private readonly auth = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private sub?: Subscription;
 
   private readonly unreadStorageKey = 'scarrow_inbox_unread_v1';
@@ -75,16 +69,17 @@ export class MessagesComponent implements OnInit, OnDestroy {
   sending = false;
   threadLoadError = '';
 
+  isLoadingInbox = true;
+  inboxError = '';
+
   inbox: InboxItem[] = [];
   threads: Record<string, ThreadMessage[]> = {};
 
-  /** Members for “new message” (from group API when available). */
+  /** Members for "new message" (from group API). */
   composeMembers: { id: string; name: string; username: string; roleBadge: string }[] = [];
 
-  private useLiveInbox = false;
-
   ngOnInit(): void {
-    this.currentUserId = this.auth.userId ?? '1';
+    this.currentUserId = this.auth.userId ?? '';
     void this.loadComposeMembers();
     void this.bootstrapInbox();
     this.sub = this.route.queryParamMap.subscribe((params) => {
@@ -99,24 +94,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private async bootstrapInbox(): Promise<void> {
     await this.loadInboxFromApi();
     this.applyUnreadFromStorage();
-    if (this.useLiveInbox) {
-      await this.refreshUnreadSummary();
-    } else {
-      this.pushUnreadCount();
-    }
+    await this.refreshUnreadSummary();
+    this.cdr.markForCheck();
   }
 
   private async loadComposeMembers(): Promise<void> {
     const gid = this.auth.groupId;
-    if (!gid) {
-      this.composeMembers = DEMO_ORG_MEMBERS.filter((m) => m.id !== this.currentUserId).map((m) => ({
-        id: m.id,
-        name: m.name,
-        username: m.username,
-        roleBadge: m.roleBadge,
-      }));
-      return;
-    }
+    if (!gid) return;
     try {
       const rows = await firstValueFrom(this.scarrow.getGroupMembers(gid));
       this.composeMembers = rows
@@ -127,27 +111,14 @@ export class MessagesComponent implements OnInit, OnDestroy {
           username: r.display_name.startsWith('@') ? r.display_name : `@${r.display_name}`,
           roleBadge: (r.role ?? '').toUpperCase() === 'HEAD' ? 'Admin' : 'Farmer',
         }));
+      this.cdr.markForCheck();
     } catch {
-      this.composeMembers = DEMO_ORG_MEMBERS.filter((m) => m.id !== this.currentUserId).map((m) => ({
-        id: m.id,
-        name: m.name,
-        username: m.username,
-        roleBadge: m.roleBadge,
-      }));
+      /* leave empty — compose list just won't show members */
     }
   }
 
   private async onQueryParams(params: ParamMap): Promise<void> {
     const receiver = params.get('receiver');
-    const user = params.get('user');
-    const thread = params.get('thread');
-    if (user && !thread && !receiver) {
-      void this.router.navigate(['/messages'], {
-        queryParams: { thread: dmThreadIdForMember(user) },
-        replaceUrl: true,
-      });
-      return;
-    }
 
     if (receiver) {
       this.ensureReceiverThread(receiver);
@@ -155,35 +126,29 @@ export class MessagesComponent implements OnInit, OnDestroy {
       const c = params.get('contact');
       this.contactView = c === '1' || c === 'true';
       await this.loadThreadHistoryIfNeeded();
+      this.cdr.markForCheck();
       return;
     }
 
-    this.applyContactVisibilityFromParams(params);
-    const t = params.get('thread');
-    if (t) {
-      this.markThreadRead(t);
-      await this.loadThreadHistoryIfNeeded();
-    }
-  }
-
-  private applyContactVisibilityFromParams(params: ParamMap): void {
     const thread = params.get('thread');
     this.conversationId = thread;
     const c = params.get('contact');
     if (!this.conversationId) {
       this.contactView = false;
+      this.cdr.markForCheck();
       return;
     }
-    this.ensureDirectMessageThread(this.conversationId);
     this.contactView = c === '1' || c === 'true';
+    if (thread) {
+      this.markThreadRead(thread);
+      await this.loadThreadHistoryIfNeeded();
+    }
+    this.cdr.markForCheck();
   }
 
   private ensureReceiverThread(receiverId: string): void {
     const existing = this.inbox.find((i) => i.id === `pending-${receiverId}`);
-    if (existing) {
-      this.threads = { ...this.threads, [`pending-${receiverId}`]: this.threads[`pending-${receiverId}`] ?? [] };
-      return;
-    }
+    if (existing) return;
     const fromOrg = this.composeMembers.find((m) => m.id === receiverId);
     const name = fromOrg?.name ?? 'Member';
     const item: InboxItem = {
@@ -194,57 +159,12 @@ export class MessagesComponent implements OnInit, OnDestroy {
       preview: 'No messages yet — say hello.',
       time: 'Now',
       unread: false,
-      phone: '—',
-      organization: this.auth.groupName ?? DEMO_ORG_NAME,
+      organization: this.auth.groupName ?? 'Organization',
       contactSubtitle: 'Organization member',
       peerUserId: receiverId,
     };
     this.inbox = [item, ...this.inbox.filter((i) => i.id !== item.id)];
     this.threads = { ...this.threads, [item.id]: [] };
-  }
-
-  private ensureDirectMessageThread(conversationId: string): void {
-    if (!conversationId.startsWith('dm-')) return;
-    if (this.inbox.some((i) => i.id === conversationId)) return;
-
-    const memberId = conversationId.slice('dm-'.length);
-    const member = getOrgMemberById(memberId);
-    if (!member) {
-      const fallback = this.composeMembers.find((m) => m.id === memberId);
-      if (!fallback) return;
-      const item: InboxItem = {
-        id: conversationId,
-        sender: fallback.name,
-        displayName: fallback.name,
-        subject: `Message ${fallback.name}`,
-        preview: 'No messages yet — say hello.',
-        time: 'Now',
-        unread: false,
-        phone: '—',
-        organization: this.auth.groupName ?? DEMO_ORG_NAME,
-        contactSubtitle: 'Organization member',
-        peerUserId: memberId,
-      };
-      this.inbox = [...this.inbox, item];
-      this.threads = { ...this.threads, [conversationId]: [] };
-      return;
-    }
-
-    const item: InboxItem = {
-      id: conversationId,
-      sender: member.name,
-      displayName: member.name,
-      subject: `Message ${member.name}`,
-      preview: 'No messages yet — say hello.',
-      time: 'Now',
-      unread: false,
-      phone: member.phone,
-      organization: DEMO_ORG_NAME,
-      contactSubtitle: 'Organization member',
-      peerUserId: memberId,
-    };
-    this.inbox = [...this.inbox, item];
-    this.threads = { ...this.threads, [conversationId]: [] };
   }
 
   openThread(id: string): void {
@@ -289,10 +209,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return item?.displayName ?? item?.sender ?? 'Contact';
   }
 
-  contactPhone(): string {
-    return this.currentInboxItem()?.phone ?? '—';
-  }
-
   contactOrganization(): string {
     return this.currentInboxItem()?.organization ?? '—';
   }
@@ -305,6 +221,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
     const name = this.contactDisplayName();
     const letter = name.trim().charAt(0);
     return letter ? letter.toUpperCase() : '?';
+  }
+
+  contactPhone(): string {
+    return '—';
   }
 
   currentThread(): ThreadMessage[] {
@@ -380,6 +300,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.threadLoadError = 'Could not send message.';
     } finally {
       this.sending = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -389,28 +310,26 @@ export class MessagesComponent implements OnInit, OnDestroy {
     if (this.conversationId?.startsWith('pending-')) {
       return this.conversationId.slice('pending-'.length);
     }
-    if (this.conversationId?.startsWith('dm-')) {
-      return this.conversationId.slice('dm-'.length);
-    }
-    return item?.peerUserId ?? null;
+    return null;
   }
 
   private async loadThreadHistoryIfNeeded(): Promise<void> {
     const id = this.conversationId;
-    if (!id || id.startsWith('pending-') || id.startsWith('dm-')) return;
+    if (!id || id.startsWith('pending-')) return;
     await this.fetchAndStoreThread(id);
   }
 
   private async fetchAndStoreThread(threadId: string): Promise<void> {
-    if (threadId.startsWith('pending-') || threadId.startsWith('dm-')) return;
-    if (!this.useLiveInbox) return;
+    if (threadId.startsWith('pending-')) return;
     try {
       const msgs = await firstValueFrom(this.messagesApi.getThreadMessages(threadId));
       const mapped = msgs.map((m, idx) => this.mapThreadMessage(m, idx));
       this.threads = { ...this.threads, [threadId]: mapped };
+      this.cdr.markForCheck();
       void this.refreshUnreadSummary();
     } catch {
       this.threadLoadError = 'Could not load messages for this thread.';
+      this.cdr.markForCheck();
     }
   }
 
@@ -429,82 +348,28 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   private async loadInboxFromApi(): Promise<void> {
+    this.isLoadingInbox = true;
+    this.inboxError = '';
     try {
       const threads = await firstValueFrom(this.messagesApi.listThreads());
-      if (!Array.isArray(threads) || threads.length === 0) {
-        this.useDemoInbox();
-        return;
+      if (Array.isArray(threads)) {
+        this.inbox = threads.map((t) => this.toInboxItem(t));
+        const mappedThreads: Record<string, ThreadMessage[]> = {};
+        for (const t of threads) {
+          mappedThreads[t.id] = [];
+        }
+        this.threads = mappedThreads;
+      } else {
+        this.inbox = [];
       }
-      this.useLiveInbox = true;
-      this.inbox = threads.map((t) => this.toInboxItem(t));
-      const mappedThreads: Record<string, ThreadMessage[]> = {};
-      for (const t of threads) {
-        mappedThreads[t.id] = [];
-      }
-      this.threads = mappedThreads;
       await this.refreshUnreadSummary();
     } catch {
-      this.useDemoInbox();
+      this.inboxError = 'Could not load messages. Check your connection.';
+      this.inbox = [];
+    } finally {
+      this.isLoadingInbox = false;
+      this.cdr.markForCheck();
     }
-  }
-
-  private useDemoInbox(): void {
-    this.useLiveInbox = false;
-    this.inbox = [
-      {
-        id: '1',
-        sender: 'System',
-        subject: 'Device sync completed',
-        preview: 'North Field Sensor finished uploading logs…',
-        time: '2h ago',
-        unread: true,
-        phone: '+1 (555) 010-1000',
-        organization: 'Scarrow',
-        contactSubtitle: 'Direct message contact',
-      },
-      {
-        id: '2',
-        sender: 'Maria Santos',
-        subject: 'Weekly field report',
-        preview: 'Attached summary for Zone A moisture readings…',
-        time: 'Yesterday',
-        unread: false,
-        phone: '+63 917 000 0000',
-        organization: 'Green Valley Co-op',
-        contactSubtitle: 'Direct message contact',
-      },
-      {
-        id: '3',
-        sender: 'Scarrow Support',
-        displayName: 'Scarrow Support',
-        subject: 'Subscription renewal',
-        preview: 'Your plan renews on the 15th. Reply with questions.',
-        time: 'Mon',
-        unread: false,
-        phone: '+1 (555) 010-1001',
-        organization: 'Scarrow',
-        contactSubtitle: 'Direct message contact',
-      },
-    ];
-    this.threads = {
-      '1': [
-        { id: 'a', author: 'System', body: 'North Field Sensor finished uploading logs at 09:42.', time: '10:12', self: false },
-        { id: 'b', author: 'You', body: 'Thanks — I will review the dashboard.', time: '10:18', self: true },
-      ],
-      '2': [
-        { id: 'a', author: 'Maria Santos', body: 'Hi team, here is the weekly summary for Zone A.', time: 'Mon 08:00', self: false },
-        { id: 'b', author: 'You', body: 'Received. Adding to the org report.', time: 'Mon 09:15', self: true },
-      ],
-      '3': [
-        {
-          id: 'a',
-          author: 'Scarrow Support',
-          body: 'Hello, your subscription renews soon. Need help with billing?',
-          time: '09:00',
-          self: false,
-        },
-      ],
-    };
   }
 
   private async refreshUnreadSummary(): Promise<void> {
@@ -512,9 +377,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       const s = await firstValueFrom(this.messagesApi.getUnreadSummary());
       this.notifications.setUnreadMessageCount(s.unread_count ?? 0);
     } catch {
-      if (!this.useLiveInbox) {
-        this.pushUnreadCount();
-      }
+      this.pushUnreadCount();
     }
   }
 
@@ -529,8 +392,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       preview: thread.latest_message ?? 'No messages yet.',
       time: this.toRelativeTime(thread.updated_at),
       unread: Boolean(thread.unread),
-      phone: '—',
-      organization: this.auth.groupName ?? 'Scarrow',
+      organization: this.auth.groupName ?? 'Organization',
       contactSubtitle: 'Direct message contact',
       peerUserId: peer,
     };
@@ -583,17 +445,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
   private markThreadRead(id: string): void {
     const idx = this.inbox.findIndex((i) => i.id === id);
     if (idx === -1) return;
-    if (!this.inbox[idx].unread) {
-      return;
-    }
+    if (!this.inbox[idx].unread) return;
     const next = [...this.inbox];
     next[idx] = { ...next[idx], unread: false };
     this.inbox = next;
     this.saveUnreadToStorage();
-    if (this.useLiveInbox) {
-      void this.refreshUnreadSummary();
-    } else {
-      this.pushUnreadCount();
-    }
+    void this.refreshUnreadSummary();
   }
 }

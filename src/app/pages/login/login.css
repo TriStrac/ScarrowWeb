@@ -558,3 +558,342 @@
     gap: 0.25rem;
   }
 }
+
+/* ── Login card hide/show for forgot-password swap ─────────────────────── */
+.login-card--hidden {
+  display: none;
+}
+
+/* ── Forgot Password panel ──────────────────────────────────────────────── */
+.fp-card {
+  background: #fff;
+  border-radius: var(--login-radius, 16px);
+  padding: 2rem 2rem 1.75rem;
+  box-shadow: 0 4px 32px rgba(0,0,0,.10), 0 1.5px 6px rgba(0,0,0,.06);
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.fp-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 .25rem;
+  line-height: 1.3;
+}
+
+.fp-lead {
+  font-size: .875rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.fp-alert {
+  background: rgba(185,28,28,.08);
+  color: #b91c1c;
+  border: 1px solid rgba(185,28,28,.2);
+  border-radius: 8px;
+  padding: .65rem 1rem;
+  font-size: .85rem;
+  margin-top: .5rem;
+}
+
+.fp-success-note {
+  background: rgba(21,128,61,.08);
+  color: #15803d;
+  border: 1px solid rgba(21,128,61,.2);
+  border-radius: 8px;
+  padding: .65rem 1rem;
+  font-size: .85rem;
+  margin-top: .5rem;
+}
+
+/* Step indicator */
+.fp-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 1.25rem;
+}
+
+.fp-step {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #94a3b8;
+  font-size: .75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s, color .2s;
+}
+
+.fp-step--active {
+  background: #15803d;
+  color: #fff;
+}
+
+.fp-step--done {
+  background: #bbf7d0;
+  color: #15803d;
+}
+
+.fp-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 4px;
+}
+
+/* Actions row */
+.fp-row-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: .5rem;
+}
+
+.fp-back-link,
+.fp-resend-link {
+  background: none;
+  border: none;
+  padding: .5rem 0;
+  font-size: .85rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color .15s;
+}
+
+.fp-back-link {
+  color: #64748b;
+  display: block;
+  margin-top: .5rem;
+  text-align: center;
+  width: 100%;
+}
+
+.fp-back-link:hover { color: #0f172a; }
+
+.fp-resend-link {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.fp-resend-link:hover { color: #166534; }
+.fp-resend-link:disabled { opacity: .5; cursor: default; }
+
+/* Password field with eye icon */
+.fp-pass-wrap {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: .5rem;
+}
+
+.fp-pass-wrap .field {
+  flex: 1;
+}
+
+.fp-eye {
+  position: absolute;
+  right: .75rem;
+  bottom: .75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color .15s;
+}
+
+.fp-eye:hover { color: #475569; }
+
+/* Done screen */
+.fp-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: .5rem 0 .25rem;
+}
+
+.fp-done__icon {
+  width: 52px;
+  height: 52px;
+  color: #15803d;
+}
+
+/* ── OTP inline panel ───────────────────────────────────────────────────── */
+.otp-panel {
+  background: #fff;
+  border-radius: var(--login-radius, 16px);
+  padding: 2rem 2rem 1.75rem;
+  box-shadow: 0 4px 32px rgba(0,0,0,.10), 0 1.5px 6px rgba(0,0,0,.06);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .5rem;
+}
+
+.otp-panel__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .5rem;
+  margin-bottom: .5rem;
+}
+
+.otp-panel__icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(21, 128, 61, .1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-bottom: .25rem;
+}
+
+.otp-panel__icon {
+  width: 26px;
+  height: 26px;
+  color: #15803d;
+}
+
+.otp-panel__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.otp-panel__lead {
+  font-size: .85rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.otp-panel__alert {
+  background: rgba(185,28,28,.08);
+  color: #b91c1c;
+  border: 1px solid rgba(185,28,28,.2);
+  border-radius: 8px;
+  padding: .6rem .9rem;
+  font-size: .83rem;
+  text-align: center;
+}
+
+.otp-panel__boxes {
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+  margin-top: .25rem;
+}
+
+.otp-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: .25rem;
+}
+
+.otp-panel__sep {
+  color: #cbd5e1;
+  font-size: .85rem;
+  user-select: none;
+}
+
+/* ── Forgot password — plain text link, no button box ─────────────────── */
+.login-forgot-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: .85rem;
+  font-family: inherit;
+  color: #15803d;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.login-forgot-link:hover {
+  color: #166534;
+  text-decoration: underline;
+}
+
+/* ── Access Denied panel ────────────────────────────────────────────────── */
+.ad-panel {
+  background: #fff;
+  border-radius: var(--login-radius, 16px);
+  padding: 2.25rem 2rem 2rem;
+  box-shadow: 0 4px 32px rgba(0,0,0,.10), 0 1.5px 6px rgba(0,0,0,.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: .75rem;
+}
+
+.ad-panel__icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(185, 28, 28, .08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-bottom: .25rem;
+}
+
+.ad-panel__icon {
+  width: 30px;
+  height: 30px;
+  color: #b91c1c;
+}
+
+.ad-panel__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.ad-panel__body {
+  font-size: .9rem;
+  color: #374151;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.ad-panel__hint {
+  font-size: .82rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+  padding: .6rem .9rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ad-panel .btn-login-submit {
+  margin-top: .5rem;
+  width: 100%;
+}

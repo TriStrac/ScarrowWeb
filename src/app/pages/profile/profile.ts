@@ -1,6 +1,7 @@
-import { Component, HostListener, OnDestroy, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import { Component, ChangeDetectorRef, HostListener, OnDestroy, OnInit, inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ScarrowApiService } from '../../services/scarrow-api.service';
@@ -26,6 +27,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly auth = inject(AuthService);
   private readonly api = inject(ScarrowApiService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
 
   /** Accordions on small screens; sidebar + panel on wide screens */
   layout: 'compact' | 'wide' = 'wide';
@@ -67,6 +70,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   deleteAccountModalOpen = false;
   deleteConfirmPhrase = '';
+  deleteSubmitting = false;
+  deleteError = '';
+
+  /** Inline feedback for the edit modal */
+  editModalError = '';
+  editModalSuccess = '';
+  editModalSubmitting = false;
 
   accountDraft = {
     email: '',
@@ -81,23 +91,25 @@ export class ProfileComponent implements OnInit, OnDestroy {
     confirmPassword: '',
   };
 
-  /** `username` is your login handle; legal name is first / middle / last. */
+  /** Live user data — populated from API on init */
   user = {
-    username: 'head_farmer_demo',
-    firstName: 'Maria',
-    middleName: 'Santos',
-    lastName: 'Reyes',
-    email: 'maria.reyes@email.com',
-    phone: '(+63) 923 456 1234',
-    address: 'Mandaue City, Cebu',
+    username: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
     birthdate: '',
   };
 
-  role = 'HEAD FARMER';
-  farmName = 'Scarrow Demo Farm';
-  isPremium = true;
+  role = '';
+  farmName = '';
+  isPremium = false;
 
-  selectedPlan: 'basic' | 'premium' = 'premium';
+  isLoading = true;
+
+  selectedPlan: 'basic' | 'premium' = 'basic';
 
   subscriptionsFeaturesModal: 'basic' | 'premium' | null = null;
 
@@ -207,11 +219,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   private applyLayout(): void {
-    if (!isPlatformBrowser(this.platformId) || !this.mq) {
-      return;
-    }
-    const compact = this.mq.matches;
-    this.layout = compact ? 'compact' : 'wide';
+    if (!isPlatformBrowser(this.platformId) || !this.mq) return;
+    this.layout = this.mq.matches ? 'compact' : 'wide';
   }
 
   scrollToAccountSection(): void {
@@ -236,6 +245,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   openAccountEditModal(id: AccountEditModalId): void {
     this.accountEditModal = id;
+    this.editModalError = '';
+    this.editModalSuccess = '';
+    this.editModalSubmitting = false;
     this.accountDraft = {
       email: this.user.email,
       firstName: this.user.firstName,
@@ -252,6 +264,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   closeAccountEditModal(): void {
     this.accountEditModal = null;
+    this.editModalError = '';
+    this.editModalSuccess = '';
   }
 
   saveAccountEditModal(): void {
@@ -259,33 +273,30 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!id) return;
 
     if (id === 'password') {
-      if (!this.accountDraft.currentPassword.trim()) {
-        alert('Enter your current password.');
+      if (!this.accountDraft.newPassword.trim()) {
+        this.editModalError = 'Please enter a new password.';
         return;
       }
       if (this.accountDraft.newPassword !== this.accountDraft.confirmPassword) {
-        alert('New password and confirmation do not match.');
+        this.editModalError = 'New password and confirmation do not match.';
         return;
       }
       if (this.accountDraft.newPassword.length < 8) {
-        alert('New password must be at least 8 characters (demo rule).');
+        this.editModalError = 'Password must be at least 8 characters.';
         return;
       }
-      alert('Password updated (demo).');
-      this.closeAccountEditModal();
+      // Password changes are handled via the Forgot Password flow on the login page.
+      this.editModalSuccess = 'To change your password, use "Forgot password?" on the login page.';
       return;
     }
 
     if (id === 'email') {
       const e = this.accountDraft.email.trim();
-      if (!e) {
-        alert('Email cannot be empty.');
-        return;
-      }
+      if (!e) { this.editModalError = 'Email cannot be empty.'; return; }
       this.user.email = e;
     } else if (id === 'name') {
       if (!this.accountDraft.firstName.trim() || !this.accountDraft.lastName.trim()) {
-        alert('First name and last name are required.');
+        this.editModalError = 'First name and last name are required.';
         return;
       }
       this.user.firstName = this.accountDraft.firstName.trim();
@@ -299,47 +310,54 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.user.address = this.accountDraft.address.trim();
     }
 
-    alert('Saved (demo).');
-    this.closeAccountEditModal();
+    this.editModalSuccess = 'Changes saved.';
+    setTimeout(() => {
+      this.closeAccountEditModal();
+      this.cdr.markForCheck();
+    }, 900);
   }
 
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydown(ev: KeyboardEvent): void {
     if (ev.key !== 'Escape') return;
-    if (this.deleteAccountModalOpen) {
-      this.closeDeleteAccountModal();
-      return;
-    }
-    if (this.subscriptionsFeaturesModal !== null) {
-      this.closeSubscriptionsFeaturesModal();
-      return;
-    }
-    if (this.accountEditModal !== null) {
-      this.closeAccountEditModal();
-    }
+    if (this.deleteAccountModalOpen) { this.closeDeleteAccountModal(); return; }
+    if (this.subscriptionsFeaturesModal !== null) { this.closeSubscriptionsFeaturesModal(); return; }
+    if (this.accountEditModal !== null) { this.closeAccountEditModal(); }
   }
 
   openDeleteAccountModal(): void {
     this.deleteConfirmPhrase = '';
+    this.deleteError = '';
     this.deleteAccountModalOpen = true;
   }
 
   closeDeleteAccountModal(): void {
     this.deleteAccountModalOpen = false;
     this.deleteConfirmPhrase = '';
+    this.deleteError = '';
   }
 
-  submitDeleteAccount(): void {
+  async submitDeleteAccount(): Promise<void> {
     if (this.deleteConfirmPhrase.trim() !== 'DELETE') {
-      alert('Type DELETE in all caps to confirm.');
+      this.deleteError = 'Type DELETE in all caps to confirm.';
+      this.cdr.markForCheck();
       return;
     }
-    alert('Account permanently deleted (demo only).');
-    this.closeDeleteAccountModal();
-  }
-
-  saveChanges() {
-    alert('Changes saved (demo).');
+    const userId = this.auth.userId;
+    if (!userId) { this.deleteError = 'No user session found.'; this.cdr.markForCheck(); return; }
+    this.deleteSubmitting = true;
+    this.deleteError = '';
+    this.cdr.markForCheck();
+    try {
+      await firstValueFrom(this.api.hardDeleteUser(userId));
+      this.auth.clearSession();
+      await this.router.navigate(['/login']);
+    } catch {
+      this.deleteError = 'Could not delete account. Please try again.';
+    } finally {
+      this.deleteSubmitting = false;
+      this.cdr.markForCheck();
+    }
   }
 
   selectPlan(plan: 'basic' | 'premium') {
@@ -355,74 +373,80 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.subscriptionsFeaturesModal = null;
   }
 
-  continueSubscription() {
-    alert(
-      this.selectedPlan === 'premium'
-        ? 'Continue with Premium (checkout coming soon).'
-        : 'You selected Basic (free).',
-    );
+  async continueSubscription(): Promise<void> {
+    if (this.selectedPlan === 'basic') {
+      alert('You selected the Basic (free) plan. No action required.');
+      return;
+    }
+    try {
+      const res = await firstValueFrom(this.api.createSubscriptionCheckout(this.selectedPlan));
+      if (res?.checkout_url) {
+        window.location.href = res.checkout_url;
+      } else {
+        alert('Subscription checkout is not available right now. Please try again later.');
+      }
+    } catch {
+      alert('Could not start checkout. Please try again.');
+    }
   }
 
-  restorePurchases() {
-    alert('Restore purchases (demo).');
+  restorePurchases(): void {
+    alert('To restore purchases, contact support at scarrow@email.com.');
   }
 
-
-  openMail() {
+  openMail(): void {
     window.location.href = 'mailto:scarrow@email.com?subject=Scarrow%20support';
   }
 
   private applySessionFromAuth(): void {
-    if (this.auth.groupName) {
-      this.farmName = this.auth.groupName;
-    }
+    if (this.auth.groupName) this.farmName = this.auth.groupName;
     const r = (this.auth.role ?? '').toUpperCase();
     if (r === 'HEAD') this.role = 'HEAD FARMER';
     else if (r) this.role = r.replace(/_/g, ' ');
     const st = this.auth.subscriptionStatus;
     if (st != null) {
-      this.isPremium = st !== 'FREE';
+      this.isPremium = st !== 'FREE' && st !== 'free';
+      this.selectedPlan = this.isPremium ? 'premium' : 'basic';
     }
+    if (this.auth.username) this.user.username = this.auth.username;
   }
 
   private async loadProfileFromApi(): Promise<void> {
+    this.isLoading = true;
+    this.cdr.markForCheck();
     this.applySessionFromAuth();
     if (this.auth.token) {
       try {
         const me = await firstValueFrom(this.api.getMe());
         this.auth.applySessionMe(me);
         this.applySessionFromAuth();
-      } catch {
-        /* ignore */
-      }
+      } catch { /* session data already applied */ }
     }
     const userId = this.auth.userId;
     if (!userId) {
-      if (this.auth.username) {
-        this.user.username = this.auth.username;
-      }
+      this.isLoading = false;
+      this.cdr.markForCheck();
       return;
     }
     try {
       const response = await firstValueFrom(this.api.getUserProfile(userId));
-      const user = response.user;
-      if (!user) return;
-      const firstName = user.profile?.first_name ?? this.user.firstName;
-      const lastName = user.profile?.last_name ?? this.user.lastName;
-      const phone = user.profile?.phone_number ?? this.user.phone;
-      const addressParts = [user.address?.street_name, user.address?.town].filter(Boolean);
-      this.user = {
-        ...this.user,
-        username: user.username ?? this.auth.username ?? this.user.username,
-        firstName,
-        lastName,
-        phone,
-        address: addressParts.length ? addressParts.join(', ') : this.user.address,
-      };
-    } catch {
-      if (this.auth.username) {
-        this.user.username = this.auth.username;
+      const u = response.user;
+      if (u) {
+        this.user = {
+          username: u.username ?? this.user.username,
+          firstName: u.profile?.first_name ?? '',
+          middleName: u.profile?.middle_name ?? '',
+          lastName: u.profile?.last_name ?? '',
+          email: u.email ?? '',
+          phone: u.profile?.phone_number ?? '',
+          address: [u.address?.street_name, u.address?.town].filter(Boolean).join(', '),
+          birthdate: u.profile?.birthdate ?? '',
+        };
       }
+    } catch { /* show whatever was set from auth session */ }
+    finally {
+      this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 }

@@ -8,8 +8,20 @@
     <h1 class="ln-title">Linked nodes</h1>
   </header>
 
-  @if (central; as c) {
-    <div class="ln-content">
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="ln-loading">
+    <div class="ln-loading__spinner"></div>
+    <p>Loading devices...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!isLoading && loadError" class="ln-missing">
+    <p class="ln-missing__text">{{ loadError }}</p>
+    <button type="button" class="ln-missing__btn" (click)="goBack()">Go back</button>
+  </div>
+
+  <!-- Content -->
+  <div class="ln-content" *ngIf="!isLoading && !loadError && central">
     <section class="ln-section" aria-labelledby="ln-pairing-label">
       <h2 id="ln-pairing-label" class="ln-label">Pairing</h2>
       <div class="ln-card ln-card--central">
@@ -23,14 +35,14 @@
           </div>
           <div class="ln-central__body">
             <span class="ln-central__kind">Central Device</span>
-            <span class="ln-central__name">{{ c.centralName }}</span>
+            <span class="ln-central__name">{{ central.name ?? central.id }}</span>
             <span
               class="ln-central__status"
-              [class.ln-central__status--active]="c.status === 'Active'"
-              [class.ln-central__status--inactive]="c.status !== 'Active'"
+              [class.ln-central__status--active]="(central.status ?? '') === 'ONLINE'"
+              [class.ln-central__status--inactive]="(central.status ?? '') !== 'ONLINE'"
             >
               <span class="ln-central__dot" aria-hidden="true"></span>
-              {{ c.status }}
+              {{ (central.status ?? 'OFFLINE') | titlecase }}
             </span>
           </div>
         </div>
@@ -40,29 +52,26 @@
     <section class="ln-section" aria-labelledby="ln-nodes-label">
       <h2 id="ln-nodes-label" class="ln-label">Node devices</h2>
       <div class="ln-card ln-card--nodes" [class.ln-card--nodes-list]="nodes.length > 0">
-        @if (nodes.length > 0) {
-          <ul class="ln-node-list" role="list">
-            @for (n of nodes; track n.id) {
-              <li class="ln-node-list__item">
-                <a
-                  class="ln-node-list__link"
-                  [routerLink]="['/device', n.id]"
-                  [queryParams]="farmerId ? { farmer: farmerId } : {}"
-                >
-                  <span class="ln-node-list__name">{{ n.deviceName }}</span>
-                  <span class="ln-node-list__meta">{{ n.location }}</span>
-                  <span
-                    class="ln-node-list__status"
-                    [class.ln-node-list__status--on]="n.online"
-                    [class.ln-node-list__status--off]="!n.online"
-                  >
-                    {{ n.online ? 'Online' : 'Offline' }}
-                  </span>
-                </a>
-              </li>
-            }
-          </ul>
-        } @else if (c.linkedNodeCount === 0) {
+        <ul class="ln-node-list" role="list" *ngIf="nodes.length > 0; else noNodes">
+          <li class="ln-node-list__item" *ngFor="let n of nodes">
+            <a
+              class="ln-node-list__link"
+              [routerLink]="['/device', n.id]"
+              [queryParams]="farmerId ? { farmer: farmerId } : {}"
+            >
+              <span class="ln-node-list__name">{{ n.name ?? n.id }}</span>
+              <span class="ln-node-list__meta">{{ n.device_type ?? 'NODE' }}</span>
+              <span
+                class="ln-node-list__status"
+                [class.ln-node-list__status--on]="(n.status ?? '') === 'ONLINE'"
+                [class.ln-node-list__status--off]="(n.status ?? '') !== 'ONLINE'"
+              >
+                {{ (n.status ?? 'OFFLINE') | titlecase }}
+              </span>
+            </a>
+          </li>
+        </ul>
+        <ng-template #noNodes>
           <div class="ln-empty">
             <div class="ln-empty__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -70,18 +79,10 @@
                 <path d="M9 7V5M12 7V5M15 7V5M9 17v2M12 17v2M15 17v2M7 9H5M17 9h2M7 12H5M17 12h2M7 15H5M17 15h2" stroke-linecap="round" />
               </svg>
             </div>
-            <p class="ln-empty__text">No node devices yet.</p>
+            <p class="ln-empty__text">No node devices registered yet.</p>
           </div>
-        } @else {
-          <p class="ln-nodes-summary">{{ c.linkedNodeCount }} node device(s) linked.</p>
-        }
+        </ng-template>
       </div>
     </section>
-    </div>
-  } @else {
-    <div class="ln-missing">
-      <p class="ln-missing__text">This central device was not found.</p>
-      <button type="button" class="ln-missing__btn" (click)="goBack()">Go back</button>
-    </div>
-  }
+  </div>
 </div>

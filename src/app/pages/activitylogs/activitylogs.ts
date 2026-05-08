@@ -5,8 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GroupByDatePipe } from '../../utils/pipes/groupBydate.pipe';
-import { PROFILE_BY_ID } from '../../data/farmer-profiles.data';
-import { getFarmerActivityLogs } from '../../data/farmer-activity-logs.data';
+import { AuthService } from '../../services/auth.service';
 import { ApiActivityLog, ScarrowApiService } from '../../services/scarrow-api.service';
 
 type ActivityLogItem = { user: string; action: string; date: string };
@@ -20,28 +19,21 @@ type ActivityLogItem = { user: string; action: string; date: string };
 })
 export class ActivityLogsComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
   private readonly api = inject(ScarrowApiService);
+
   readonly apiLogs = signal<ActivityLogItem[] | null>(null);
+  readonly isLoading = signal(true);
+  readonly loadError = signal('');
 
   readonly farmerId = toSignal(
     this.route.paramMap.pipe(map((p) => p.get('farmerId') ?? '')),
     { initialValue: '' },
   );
 
-  readonly memberProfile = computed(() => {
-    const id = this.farmerId();
-    return id ? (PROFILE_BY_ID[id] ?? null) : null;
-  });
+  readonly memberName = signal('Member');
 
-  readonly memberName = computed(() => this.memberProfile()?.name ?? 'Member');
-
-  readonly farmLabel = computed(() => this.memberProfile()?.farmName ?? null);
-
-  readonly activityLogs = computed(() => {
-    const live = this.apiLogs();
-    if (live && live.length > 0) return live;
-    return getFarmerActivityLogs(this.farmerId(), this.memberName());
-  });
+  readonly activityLogs = computed(() => this.apiLogs() ?? []);
 
   readonly searchQuery = signal('');
 
@@ -69,12 +61,38 @@ export class ActivityLogsComponent {
   }
 
   private async loadActivityLogs(): Promise<void> {
+    this.isLoading.set(true);
+    this.loadError.set('');
     try {
-      const rows = await firstValueFrom(this.api.getMyActivityLogs());
-      if (!Array.isArray(rows) || rows.length === 0) return;
-      this.apiLogs.set(rows.map((r) => this.toActivityLogItem(r)));
+      const userId = this.farmerId();
+      const gid = this.auth.groupId;
+
+      let rows: ApiActivityLog[];
+      if (userId && gid) {
+        // HEAD viewing a member's logs  → GET /groups/:gid/members/:uid/activity-logs
+        rows = await firstValueFrom(this.api.getMemberActivityLogs(gid, userId));
+        // Attempt to get member display name from group roster
+        try {
+          const members = await firstValueFrom(this.api.getGroupMembers(gid));
+          const member = members.find((m) => m.user_id === userId);
+          if (member) this.memberName.set(member.display_name);
+        } catch { /* ignore */ }
+      } else {
+        // User viewing their own logs  → GET /activityLogs/my
+        rows = await firstValueFrom(this.api.getMyActivityLogs());
+        this.memberName.set(this.auth.username ?? 'Me');
+      }
+
+      if (Array.isArray(rows) && rows.length > 0) {
+        this.apiLogs.set(rows.map((r) => this.toActivityLogItem(r)));
+      } else {
+        this.apiLogs.set([]);
+      }
     } catch {
-      // Keep existing local demo logs.
+      this.loadError.set('Could not load activity logs. Check your connection and try again.');
+      this.apiLogs.set([]);
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
