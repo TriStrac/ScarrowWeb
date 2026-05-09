@@ -28,12 +28,38 @@ app.use(
 
 /**
  * Serve static files from /browser
+ * Cache HTML files briefly (60s), cache CSS/JS/Images for 1 hour
+ * Use Cache-Control: no-cache for index.html to ensure fresh loads
  */
+app.use((req, res, next) => {
+  if (req.path === '/index.html') {
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    });
+  } else if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+    res.set({
+      'Cache-Control': 'public, max-age=3600',
+    });
+  }
+  next();
+});
+
 app.use(
   express.static(browserDistFolder, {
-    maxAge: '1y',
+    maxAge: '1h',
     index: false,
     redirect: false,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.set({
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        });
+      }
+    },
   }),
 );
 
